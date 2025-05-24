@@ -1,6 +1,6 @@
-# Tauri + Vanilla
+# Plauzible
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Javascript.
+Plauzible is a Tauri password management application.
 
 ## Recommended IDE Setup
 
@@ -19,7 +19,7 @@ Template created!
 
 Your system is missing dependencies (or they do not exist in $PATH):
 ╭───────────┬───────────────────────────────────────────────────────────╮
-│ Tauri CLI │ Run `cargo install tauri-cli --version '^2.0.0' --locked` │
+│ Tauri CLI │ Run "cargo install tauri-cli --version '^2.0.0' --locked" │
 ╰───────────┴───────────────────────────────────────────────────────────╯
 
 Make sure you have installed the prerequisites for your OS: https://tauri.app/start/prerequisites/, then run:

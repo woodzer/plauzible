@@ -1,0 +1,27 @@
+.hidden {
+}
+
+.is-200px-wide {
+    width: 200px;
+}
+
+table.table tbody tr.table-row td {
+    background-color: #fff;
+}
+
+table.table tbody .table-row:hover td {
+    background-color: rgba(250, 250, 250, 0.75);
+    font-weight: bold;
+}
+
+table.table tbody .table-row .actions-column > .buttons.hidden {
+    display: none;
+}
+
+table.table tbody .table-row:hover .actions-column > .buttons.hidden {
+    display: block;
+}
+
+#password_card {
+    margin-top: 175px;
+}

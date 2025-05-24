@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/fontawesome-5.9.0.min.css" />
+    <link rel="stylesheet" href="/css/bulma-1.0.4.min.css" />
+    <link rel="stylesheet" href="/css/application.css" />
+
+    <title>Plauzible</title>
+
+    <script src="/js/fontawesome-5.9.0.min.js" defer></script>
+    <script type="module" src="/js/application.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <section class="ui-section" id="password_section">
+            <div class="columns">
+                <div class="column is-10 is-offset-1">
+                    <div class="card" id="password_card">
+                        <header class="card-header">
+                            <p class="card-header-title">Session Password</p>
+                        </header>
+
+                        <div class="card-content">
+                            <p class="content has-text-justified">
+                                Enter a password in the field below to start a new session. Note that all
+                                passwords are valid but only the password that was used to create an entry
+                                will make it available for a session. To maximize security you should avoid
+                                using common or obvious passwords and make any passwords you choose to use
+                                as long as possible.
+                            </p>
+
+                            <div class="field">
+                                <label class="label">Password</label>
+                                <div class="component">
+                                    <input class="input" name="password" placeholder="Enter a session password" type="password"/>
+                                </div>
+                                <p class="help is-danger is-hidden">
+                                    A password must be provided and must be a minimum of 10 characters in length.
+                                </p>
+                            </div>
+
+                            <div class="mr-2 mt-5 pb-3">
+                                <div class="buttons has-clearfix is-pulled-right">
+                                    <button class="button is-success" id="submit_password_button">Submit</button>
+                                </div>
+                            </div>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="is-hidden ui-section" id="application_section">
+            <nav class="mb-3 navbar" role="navigation">
+                <div class="navbar-brand">
+                    <span class="navbar-item">
+                        <h1 class="is-3 mb-4 pt-3 title">Plauzible</h1><br>
+                    </span>
+                </div>
+
+                <div class="navbar-start">
+                    <span class="navbar-item">
+                        <button class="button create-record" title="Add Password Entry">
+                            <span class="icon is small">
+                                <i class="fas fa-plus"></i>
+                            </span>    
+                        </button>
+                    </span>
+                </div>
+
+                <div class="navbar-end">
+                    <span class="navbar-item">
+                        <button class="button" title="Settings">
+                            <span class="icon is small">
+                                <i class="fas fa-cog"></i>
+                            </span>    
+                        </button>
+                    </span>
+
+                    <span class="navbar-item">
+                        <button class="button" title="End Session">
+                            <span class="icon is small">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </span>    
+                        </button>
+                    </span>
+                </div>
+            </nav>
+
+            <section id="record_list">
+                <div class="is-hidden">
+                    <p class="has-text-centered has-text-grey-light is-size-5 mt-6">No records found. Click <a class="create-record has-text-info has-text-weight-bold">here</a> to get start.</p>
+                </div>
+
+                <div class="record-list-table">
+                    <div class="table-container">
+                        <table class="is-fullwidth table" id="record_list_table">
+                            <thead>
+                                <tr>
+                                    <th>Entry Name</th>
+                                    <th class="is-200px-wide"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="is-hidden pl-6 pr-6 ui-section" id="record_form">
+            <h2 class="is-4 mt-5 title"><span class="create-title">Create</span><span class="is-hidden update-title">Update</span> Record</h2>
+            <hr>
+
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" name="name" placeholder="Enter a name for the record" type="text"/>
+                </div>
+                <p class="help is-danger is-hidden">
+                    You must enter a unique name for your record.
+                </p>
+            </div>
+
+            <div class="field">
+                <label class="label">User Name</label>
+                <div class="control">
+                    <input class="input" name="user_name" placeholder="Enter a user name for the record" type="text"/>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                    <input class="input" name="password" placeholder="Enter the password for the record" type="password"/>
+                </div>
+                <p class="help is-danger is-hidden">
+                    You must enter a password for your record.
+                </p>
+            </div>
+
+            <div class="field">
+                <label class="label">Site URL</label>
+                <div class="control">
+                    <input class="input" name="url" placeholder="Enter an URL for the site associated with this record" type="text"/>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Notes</label>
+                <div class="control">
+                    <textarea class="textarea" name="notes" placeholder="Enter notes for the record"></textarea>
+                </div>
+            </div>
+
+            <div class="buttons is-pulled-right mt-3">
+                <button class="button is-success submit-record-create">Create</button>
+                <button class="button is-hidden is-success submit-record-update">Update</button>
+                <button class="button cancel-record-form">Cancel</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="is-hidden" id="templates_container">
+        <template id="list_table_row_template">
+            <tr class="table-row">
+                <td class="name-column"></td>
+                <td class="actions-column">
+                    <div class="buttons hidden is-pulled-right">
+                        <span class="edit-record-link has-text-link icon is-clickable mr-3" title="Edit">
+                            <i class="fas fa-pencil-alt is-size-5"></i>
+                        </span>
+                        <span class="delete-record-link has-text-link icon is-clickable mr-3" title="Delete">
+                            <i class="fas fa-trash-alt is-size-5"></i>
+                        </span>
+                        <span class="copy-password-link has-text-link icon is-clickable mr-3" title="Copy Password">
+                            <i class="far fa-clone is-size-5"></i>
+                        </span>
+                        <span class="open-url-link has-text-link icon is-clickable mr-3" title="Launch">
+                            <i class="fas fa-external-link-alt is-size-5"></i>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </template>
+    </div>
+</body>
+</html>

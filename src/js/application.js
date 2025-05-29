@@ -29,12 +29,10 @@ function createRecord(event) {
     if(validateRecordForm()) {
         if(settings.passwordHash) {
             let data = getRecordContent();
-            console.log("RECORD DATA:", data);
 
             invoke("store_record", {passwordHashHex: settings.passwordHash, record: JSON.stringify(data)})
                 .then((output) => {
                     let listRecord = JSON.parse(output);
-                    console.log("LIST RECORD: ", listRecord);
                     settings.records.push(listRecord);
                     settings.record = settings.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
                     populateRecordListTable();
@@ -64,6 +62,14 @@ function editRecord(recordId) {
     } else {
         console.error(`Unable to locate a record with the id ${recordId}.`);
     }
+}
+
+function endSession(event) {
+    event.preventDefault();
+    settings.passwordHash = null;
+    settings.records = [];
+    clearRecordListTable();
+    showPasswordSection();
 }
 
 function getRecordContent() {
@@ -226,6 +232,10 @@ function setupNavigationBar() {
             showRecordFormSection();
         })
     });
+
+    document.querySelectorAll(".end-session").forEach((element) => {
+        element.addEventListener("click", endSession);
+    });
 }
 
 function setupPasswordHandling() {
@@ -262,7 +272,6 @@ function setupRowEventHandlers(row, record) {
     let link = row.querySelector(".edit-record-link");
 
     if(link) {
-        console.log("Edit record link handler would be set up here!");
         link.addEventListener("click", (event) => {
             editRecord(record.id);
             showSection("record_form");
@@ -290,11 +299,9 @@ function setupRowEventHandlers(row, record) {
 }
 
 function showApplicationSection(passwordHash) {
-    console.log("PASSWORD HASH:", passwordHash);
     invoke("get_records_for_password", {passwordHash: passwordHash})
     .then((data) => {
         let object = JSON.parse(data);
-        console.log("DATA:", data);
         settings.records = object.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
         populateRecordListTable();
         showSection("application_section");
@@ -371,7 +378,6 @@ function submitPassword(event) {
 
         if(passwordValue.trim().length >= MINIMUM_PASSWORD_LENGTH) {
             passwordField.value = "";
-            console.log(`Password Submitted: ${passwordValue}`);
             invoke("hash_password", {password: passwordValue})
                 .then((hash) => {
                     settings.passwordHash = hash;

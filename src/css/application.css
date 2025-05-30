@@ -1,3 +1,36 @@
+.application-navbar {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.application-navbar-section {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    flex-flow: row wrap;
+    margin: 0 10px;
+}
+
+.application-navbar-section-left {
+    justify-content: flex-start;
+}
+
+.application-navbar-section-right {
+    justify-content: flex-end;
+}
+
+body {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.height-100pct {
+    height: 100%;
+}
+
 .hidden {
 }
 
@@ -5,23 +38,49 @@
     width: 200px;
 }
 
-table.table tbody tr.table-row td {
-    background-color: #fff;
+#password_card {
+    margin-top: 175px;
 }
 
-table.table tbody .table-row:hover td {
-    background-color: rgba(250, 250, 250, 0.75);
-    font-weight: bold;
+.record-list {
+    bottom: 0;
+    left: 0;
+    overflow: auto;
+    position: absolute;
+    right: 0;
+    top: 80px;
 }
 
-table.table tbody .table-row .actions-column > .buttons.hidden {
+.record-list-table {
+    font-size: 1.2em;
+}
+
+.table-row .table-column .buttons.hidden {
     display: none;
 }
 
-table.table tbody .table-row:hover .actions-column > .buttons.hidden {
+.table-row:hover {
+    font-weight: bold;
+}
+
+.table-row:hover .table-column .buttons.hidden {
     display: block;
 }
 
-#password_card {
-    margin-top: 175px;
+.table-row {
+    background-color: #fff;
+    display: grid;
+    grid-template-columns: auto 200px;
+}
+
+.table-row:hover {
+    background-color: rgba(250, 250, 250, 0.75);
+}
+
+.ui-section {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
 }

@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container height-100pct">
         <section class="ui-section" id="password_section">
             <div class="columns">
                 <div class="column is-10 is-offset-1">
@@ -56,59 +56,40 @@
         </section>
 
         <section class="is-hidden ui-section" id="application_section">
-            <nav class="mb-3 navbar" role="navigation">
-                <div class="navbar-brand">
-                    <span class="navbar-item">
-                        <h1 class="is-3 mb-4 pt-3 title">Plauzible</h1><br>
-                    </span>
-                </div>
+            <nav class="application-navbar mt-2">
+                <section class="application-navbar-section application-navbar-section-left">
+                    <h1 class="is-3 mb-4 pt-3 title">Plauzible</h1><br>
+                </section>
 
-                <div class="navbar-start">
-                    <span class="navbar-item">
-                        <button class="button create-record" title="Add Password Entry">
-                            <span class="icon is small">
-                                <i class="fas fa-plus"></i>
-                            </span>    
-                        </button>
-                    </span>
-                </div>
+                <section class="application-navbar-section application-navbar-section-right">
+                    <button class="button create-record" title="Add Password Entry">
+                        <span class="icon is small">
+                            <i class="fas fa-plus"></i>
+                        </span>    
+                    </button>
 
-                <div class="navbar-end">
-                    <span class="navbar-item">
-                        <button class="button" title="Settings">
-                            <span class="icon is small">
-                                <i class="fas fa-cog"></i>
-                            </span>    
-                        </button>
-                    </span>
+                    <button class="button" title="Settings">
+                        <span class="icon is small">
+                            <i class="fas fa-cog"></i>
+                        </span>    
+                    </button>
 
-                    <span class="navbar-item">
-                        <button class="button end-session" title="End Session">
-                            <span class="icon is small">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </span>    
-                        </button>
-                    </span>
-                </div>
+                    <button class="button end-session" title="End Session">
+                        <span class="icon is small">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </span>    
+                    </button>
+                </section>
             </nav>
 
-            <section id="record_list">
+            <section class="record-list" id="record_list">
                 <div class="is-hidden">
                     <p class="has-text-centered has-text-grey-light is-size-5 mt-6">No records found. Click <a class="create-record has-text-info has-text-weight-bold">here</a> to get start.</p>
                 </div>
 
                 <div class="record-list-table">
-                    <div class="table-container">
-                        <table class="is-fullwidth table" id="record_list_table">
-                            <thead>
-                                <tr>
-                                    <th>Entry Name</th>
-                                    <th class="is-200px-wide"></th>
-                                </tr>
-                            </thead>
-
-                            <tbody></tbody>
-                        </table>
+                    <div class="table-container mr-4">
+                        <section class="record-list-table-body" id="record_list_table"></section>
                     </div>
                 </div>
             </section>
@@ -169,25 +150,25 @@
 
     <div class="is-hidden" id="templates_container">
         <template id="list_table_row_template">
-            <tr class="table-row">
-                <td class="name-column"></td>
-                <td class="actions-column">
+            <div class="pb-3 pl-3 pt-3 table-row">
+                <div class="name-column table-column"></div>
+                <div class="actions-column table-column">
                     <div class="buttons hidden is-pulled-right">
-                        <span class="edit-record-link has-text-link icon is-clickable mr-3" title="Edit">
+                        <span class="edit-record-link icon is-clickable mr-3" title="Edit">
                             <i class="fas fa-pencil-alt is-size-5"></i>
                         </span>
-                        <span class="delete-record-link has-text-link icon is-clickable mr-3" title="Delete">
+                        <span class="delete-record-link icon is-clickable mr-3" title="Delete">
                             <i class="fas fa-trash-alt is-size-5"></i>
                         </span>
-                        <span class="copy-password-link has-text-link icon is-clickable mr-3" title="Copy Password">
+                        <span class="copy-password-link icon is-clickable mr-3" title="Copy Password">
                             <i class="far fa-clone is-size-5"></i>
                         </span>
-                        <span class="open-url-link has-text-link icon is-clickable mr-3" title="Launch">
+                        <span class="open-url-link icon is-clickable mr-3" title="Launch">
                             <i class="fas fa-external-link-alt is-size-5"></i>
                         </span>
                     </div>
-                </td>
-            </tr>
+                </div>
+            </div>
         </template>
     </div>
 </body>

@@ -10,16 +10,12 @@ let settings = {
 };
 
 function clearRecordListTable() {
-    let recordListTable = document.querySelector("#record_list_table");
+    let recordListTable = document.querySelector(".record-list-table-body");
 
     if(recordListTable) {
-        let tableBody = recordListTable.querySelector("tbody");
-
-        if(tableBody) {
-            tableBody.innerHTML = "";
-        }
+        recordListTable.innerHTML = "";
     } else {
-        console.error("Failed to find the record list table element on the page.");
+        console.error("Failed to find the record list table body element on the page.");
     }
 }
 
@@ -180,12 +176,12 @@ function populateRecordListTable() {
             clearRecordListTable();
             settings.records.forEach((record) => {
                 let row     = rowTemplate.content.cloneNode(true);
-                let columns = [row.querySelector("tr td:first-child"), row.querySelector("tr td:last-child")];
+                let columns = row.querySelectorAll(".table-column");
 
                 columns[0].innerText = record.name;
-                row.querySelector("tr").dataset.id = `${record.id}`;
+                row.querySelector("div.table-row").dataset.id = `${record.id}`;
                 setupRowEventHandlers(row, record);
-                tableBody.appendChild(row);
+                recordListTable.appendChild(row);
             });
         } else {
             console.error("Failed to find the record list table row template element on the page.");

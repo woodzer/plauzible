@@ -32,7 +32,14 @@ function createRecord(event) {
                     settings.records.push(listRecord);
                     settings.record = settings.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
                     populateRecordListTable();
-                    showSection("application_section");
+                    showSection("application_section")
+                        .then(() => {
+                            new Notify({
+                                status: "success",
+                                text: "Record successfully created.",
+                                title: "Success"
+                            });
+                        });
                 });
         } else {
             showError("Call to create record failed because the password hash has not been set.");

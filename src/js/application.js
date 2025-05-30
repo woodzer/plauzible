@@ -35,7 +35,7 @@ function createRecord(event) {
                     showSection("application_section");
                 });
         } else {
-            console.error("Call to create record failed because the password hash has not been set.");
+            showError("Call to create record failed because the password hash has not been set.");
         }
     }
 }
@@ -57,6 +57,7 @@ function editRecord(recordId) {
             });
     } else {
         console.error(`Unable to locate a record with the id ${recordId}.`);
+        showError("Edit request failed. Request record could not be located.");
     }
 }
 
@@ -306,7 +307,12 @@ function showApplicationSection(passwordHash) {
 
 function showError(message) {
     console.error("ERROR:", message);
-    // TBD: SHOW ERRORS TO USER!!!
+    new Notify({
+        autotimeout: 10000,
+        status: "error",
+        text: message,
+        title: "Error"
+    });
 }
 
 function showFieldHelp(element) {

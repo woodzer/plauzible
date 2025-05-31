@@ -246,9 +246,13 @@ function setupPasswordHandling() {
     let passwordSection = document.querySelector("#password_section");
 
     if(passwordSection) {
-        let submitButton = document.querySelector("#submit_password_button");
-
-        submitButton.addEventListener("click", submitPassword);
+        password_section.querySelector('input[name="password"]').addEventListener("keypress", (event) => {
+            const keyCode = event.code || event.key;
+            if(keyCode === 'Enter') {
+                submitPassword(event);
+            }
+        });
+        password_section.querySelector("#submit_password_button").addEventListener("click", submitPassword);
     } else {
         console.error("Unable to locate the password section on the page.");
     }

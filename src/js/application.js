@@ -40,10 +40,33 @@ function createRecord(event) {
                                 title: "Success"
                             });
                         });
-                });
+                })
+                .catch((error) => showError(`Record creation failed. Cause: ${error}`));
         } else {
             showError("Call to create record failed because the password hash has not been set.");
         }
+    }
+}
+
+function deleteRecord(event) {
+    let modal = document.querySelector("#delete_confirmation_modal");
+
+    event.preventDefault();
+    if(modal) {
+        let source = event.target;
+
+        if(!source.dataset.recordId) {
+            source = source.closest("span.icon");
+        }
+
+        if(source.dataset.recordId) {
+            modal.querySelector(".submit-button").dataset.recordId = source.dataset.recordId;
+            modal.classList.add("is-active");
+        } else {
+            showError("Unable to delete the specified entry, record id not found. Please contact support.");
+        }
+    } else {
+        console.error("Unable to locate the delete confirmation modal on the page.");
     }
 }
 
@@ -139,9 +162,35 @@ function hideVisibleSection() {
 
 function initializeApplication() {
     setupPasswordHandling();
+    setupModals();
     setupRecordForm();
     setupNavigationBar();
     showPasswordSection();
+}
+
+function onDeleteRecordConfirmed(event) {
+    let source = event.target;
+
+    event.preventDefault();
+    if(source.dataset.recordId) {
+        let recordId = parseInt(source.dataset.recordId);
+
+        if(!isNaN(recordId)) {
+            invoke("delete_record", {recordId: recordId})
+                .then((id) => {
+                    settings.records = settings.records.filter((record) => record.id !== id);
+                    source.closest(".modal").classList.remove("is-active");
+                    populateRecordListTable();
+                })
+                .catch((error) => {
+                    showError(`Record deletion failed. Cause: ${error}`);
+                });
+        } else {
+            showError("Unable to delete the specified entry, invalid record id encountered. Please contact support.");
+        }
+    } else {
+        showError("Unable to delete the specified entry, record id not found. Please contact support.");
+    }
 }
 
 function populateRecordForm(record) {
@@ -228,6 +277,22 @@ function resetForm(mode) {
     }
 }
 
+function setupModals() {
+    let modal;
+
+    document.querySelectorAll(".cancel-modal").forEach((element) => {
+        element.addEventListener("click", (event) => {
+            event.preventDefault();
+            element.closest(".modal").classList.remove("is-active");
+        })
+    });
+
+    modal = document.querySelector("#delete_confirmation_modal");
+    if(modal) {
+        modal.querySelector("button.submit-button").addEventListener("click", onDeleteRecordConfirmed);
+    }
+}
+
 function setupNavigationBar() {
     document.querySelectorAll(".create-record").forEach((element) => {
         element.addEventListener("click", (event) => {
@@ -288,7 +353,8 @@ function setupRowEventHandlers(row, record) {
 
     link = row.querySelector(".delete-record-link");
     if(link) {
-        console.log("Delete record link handler would be set up here!");
+        link.dataset.recordId = record.id;
+        link.addEventListener("click", deleteRecord);
     }
 
     link = row.querySelector(".copy-password-link");

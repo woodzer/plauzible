@@ -9,8 +9,9 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            commands::delete_database,
             commands::decrypt_record,
+            commands::delete_database,
+            commands::delete_record,
             commands::has_been_initialized,
             commands::get_database_path,
             commands::get_records_for_password,

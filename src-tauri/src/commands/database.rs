@@ -8,9 +8,10 @@ use sqlx::sqlite::{Sqlite, SqliteConnectOptions, SqlitePool};
 
 use crate::commands::utilities;
 
+const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
+const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
-const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
 
 #[derive(sqlx::FromRow)]
 pub struct DataRecord {id: i64, data: String}
@@ -58,6 +59,17 @@ pub async fn connect_to_database() -> Result<Pool<Sqlite>, String> {
     match SqlitePool::connect_with(settings).await {
         Ok(pool) => Ok(pool),
         Err(_) => Err(format!("Failed to connect to the '{}' database.", database_path))
+    }
+}
+
+pub async fn delete_record_by_id(record_id: i64) -> Result<i64, String> {
+    let pool = connect_to_database().await?;
+
+    match sqlx::query(DELETE_RECORD_SQL)
+        .bind(record_id)
+        .execute(&pool).await {
+        Ok(_) => Ok(record_id),
+        Err(error) => Err(format!("Error deleting record data. Cause: {:?}", error))
     }
 }
 

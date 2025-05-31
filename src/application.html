@@ -150,6 +150,32 @@
         </section>
     </div>
 
+    <div id="modals_container">
+        <!-- Delete Record Confirmation Modal -->
+        <div class="modal" id="delete_confirmation_modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Confirm Delete</p>
+                    <button class="delete cancel-modal"></button>
+                </header>
+
+                <section class="modal-card-body">
+                    <p class="content has-text-justified">
+                        Deleted records are permanently removed and cannot be recovered. Are you sure you want to delete this record?
+                    </p>
+                </section>
+
+                <footer class="modal-card-foot">
+                    <div class="buttons">
+                        <button class="button is-danger submit-button">Continue</button>
+                        <button class="button cancel-modal">Cancel</button>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
     <div class="is-hidden" id="templates_container">
         <template id="list_table_row_template">
             <div class="pb-3 pl-3 pt-3 table-row">

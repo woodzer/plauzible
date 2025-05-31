@@ -7,6 +7,11 @@ pub fn delete_database() -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn delete_record(record_id: i64) -> Result<i64, String> {
+    database::delete_record_by_id(record_id).await
+}
+
+#[tauri::command]
 pub async fn decrypt_record(password_hash: String, record: String) -> Result<String, String> {
     let mut pool = database::connect_to_database().await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;

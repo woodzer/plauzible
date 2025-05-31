@@ -3,11 +3,12 @@ use std::fs;
 use std::path::PathBuf;
 use std::str;
 use json;
-use sqlx::{Pool, Row};
+use sqlx::{Pool, Row, Transaction};
 use sqlx::sqlite::{Sqlite, SqliteConnectOptions, SqlitePool};
 
 use crate::commands::utilities;
 
+const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
@@ -35,7 +36,6 @@ pub fn create_database() -> Result<String, String> {
         return Err(format!("The '{}' database file already exists.", target_path.display()));
     }
 
-    println!("Copying '{}' to '{}'.", template_path.display(), target_path.display());
     match fs::copy(template_path, &target_path) {
         Err(error) => Err(format!(
             "Copy application database failed: Cause: {:?}",
@@ -62,6 +62,16 @@ pub async fn connect_to_database() -> Result<Pool<Sqlite>, String> {
     }
 }
 
+/// Retrieves a count of the total number of records in the data_records database table.
+pub async fn count_total_records(pool: &mut Pool<Sqlite>) -> Result<i64, String> {
+    let count: i64 = match sqlx::query_scalar(COUNT_RECORDS_SQL).fetch_one(& *pool).await {
+        Ok(total) => total,
+        Err(error) => return Err(format!("Error counting total records. Cause: {:?}", error))
+    };
+    Ok(count)
+}
+
+/// Deletes a record from the data_records database table based on it's id.
 pub async fn delete_record_by_id(record_id: i64) -> Result<i64, String> {
     let pool = connect_to_database().await?;
 
@@ -152,13 +162,10 @@ pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
     };
 
     for record in records {
-        println!("RECORD: id: {}, data: {}", record.id, record.data);
         match utilities::decrypt(password_hash, &nonce_setting.value, &record.data).await {
             Some(json_data) => {
-                println!("JSON Data:\n{}", &json_data);
                 match json::parse(&json_data) {
                     Ok(content) => {
-                        println!("JSON: {:?}", content);
                         let url = match content["url"].is_string() {
                             true => content["url"].as_str().expect("URL string extraction failed."),
                             _ => ""
@@ -173,13 +180,12 @@ pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
                             _ => ()
                         };
                     },
-                    Err(error) => println!("JSON data did not parse into content. Cause: {:?}", error)
+                    Err(_) => () // JSON data did not parse into content.
                 };
             },
-            _ => println!("Decryption of record did not succeed, record will be ignored.")
+            _ => ()  // Decryption of record did not succeed, record will be ignored.
         };
     };
-    println!("OBJECTS: {:?}", objects);
 
     Ok(json::stringify(object!{
         records: objects
@@ -237,12 +243,28 @@ pub fn remove_existing_database() -> Result<(), String> {
 
 /// Writes data to the data_records database table. Returns the id of the record
 /// written if successful.
-pub async fn write_record(data: &str) -> Result<i64, String> {
-    let pool = connect_to_database().await?;
+// pub async fn write_record(data: &str) -> Result<i64, String> {
+//     let pool = connect_to_database().await?;
 
+//     match sqlx::query(CREATE_RECORD_SQL)
+//         .bind(data)
+//         .fetch_all(&pool).await {
+//         Ok(rows) => {
+//             match rows.first() {
+//                 Some(row) => Ok(row.get("id")),
+//                 None => Err(String::from("Insert did not return record details."))
+//             }
+//         },
+//         Err(error) => Err(format!("Error writing record data. Cause: {:?}", error))
+//     }
+// }
+
+/// Writes data to the data_records database table. Returns the id of the record
+/// written if successful.
+pub async fn write_record_in_transaction(transaction: &mut Transaction<'_, Sqlite>, data: &str) -> Result<i64, String> {
     match sqlx::query(CREATE_RECORD_SQL)
         .bind(data)
-        .fetch_all(&pool).await {
+        .fetch_all(&mut **transaction).await {
         Ok(rows) => {
             match rows.first() {
                 Some(row) => Ok(row.get("id")),

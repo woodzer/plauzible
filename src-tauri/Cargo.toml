@@ -31,4 +31,5 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 base64 = "0.22.1"
 typenum = "1.18.0"
 aes = "0.8.4"
+rand = "0.9.1"
 

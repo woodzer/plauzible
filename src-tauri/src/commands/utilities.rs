@@ -9,6 +9,9 @@ use aes_gcm::{
 use argon2::{Argon2, password_hash::SaltString};
 use aes::cipher::generic_array::GenericArray;
 use hex;
+use rand::prelude::*;
+
+pub struct FakeRecord {pub data: String, pub nonce: String, pub salt: String}
 
 /// Takes the application salt, nonce and user password and attempts to
 /// decrypt data specified as a hexidecimal string. Returns an Option that will
@@ -17,8 +20,8 @@ use hex;
 pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option<String> {
     let hash_bytes = match hex::decode(password_hash) {
         Ok(bytes) => bytes,
-        Err(message) => {
-            println!("{}", message);
+        Err(_) => {
+            // Decoding of password hash from hex to bytes failed.
             return None
         }
     };
@@ -26,16 +29,16 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
     let cipher = Aes256Gcm::new(&key);
     let nonce_bytes = match hex::decode(nonce_hex) {
         Ok(bytes) => bytes,
-        Err(error) => {
-            println!("{}", format!("Failed to convert nonce to bytes. Cause: {:?}", error));
+        Err(_) => {
+            // Conversion of nonce from hex to bytes failed.
             return None;
         }
     };
     let nonce: &GenericArray::<u8, typenum::U12> = Nonce::from_slice(nonce_bytes.as_slice());
     let cipher_data: &[u8] = &match hex::decode(data) {
         Ok(bytes) => bytes,
-        Err(error) => {
-            println!("{}", format!("Failed to convert data from hex format. Cause: {:?}", error));
+        Err(_) => {
+            // Conversion of encrypted data from hex to bytes failed.
             return None;
         }
     };
@@ -44,14 +47,14 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
         Ok(bytes) => {
             match str::from_utf8(bytes.as_slice()) {
                 Ok(string) => Some(string.to_string()),
-                Err(error) => {
-                    println!("{}", format!("Decrypt data is not a valid string. Cause: {:?}", error));
+                Err(_) => {
+                    // Decrypted data is not a valid string.
                     None
                 }
             }
         },
-        Err(error) => {
-            println!("{}", format!("Failed to decrypt data string. Cause: {:?}", error));
+        Err(_) => {
+            // Decryption was unsuccessful.
             None
         }
     }
@@ -91,6 +94,47 @@ pub fn generate_password_hash<'a>(salt_b64: &'a str, password: &'a str) -> Resul
         Ok(_) => Ok(bytes.to_vec()),
         Err(error) => Err(format!("Failed to generate password hash. Cause: {:?}", error))
     }
+}
+
+/// This function generates a random number of strings containing fake record
+/// data that can be used to create fake records. A base size for the data must
+/// be specified. The variation value should be a percentage will be used to
+/// alter the size of values generated based on the base size. The strings
+/// generated will vary in size from variation percent smaller to variation
+/// percent larger. The minimum specifies the minimum number of strings to
+/// be generated and maximum is the maximum number of strings to be generated.
+/// The actual number generated will be somewhere between these two figures.
+pub fn generate_fake_record_data(base_size: i64, variation: f64, minimum: u8, maximum: u8) -> Vec<String> {
+   let mut strings = Vec::new();
+   let mut total_strings = maximum;
+   let mut generator = rand::rng();
+
+   if minimum != maximum {
+       total_strings = generator.random_range(minimum..=maximum);
+   }
+
+   while total_strings > 0 {
+       let size_factor = 1.0_f64 + generator.random_range(-variation..=variation);
+       let actual_size = ((base_size as f64 * size_factor) as i64) as usize;
+
+       strings.push((&mut generator).sample_iter(rand::distr::Alphanumeric).take(actual_size).map(char::from).collect());
+       total_strings = total_strings - 1;
+   }
+
+   strings
+}
+
+/// This function generates a collection of FakeRecord instances representing
+/// the data for fake records that are going to be inserted into the database
+/// along with a real record.
+pub fn generate_fake_records(base_size: i64, minimum: u8, maximum: u8) -> Vec<FakeRecord> {
+    let mut records = Vec::new();
+
+    for data in generate_fake_record_data(base_size, 0.1_f64, minimum, maximum) {
+        records.push(FakeRecord {data: data, nonce: generate_nonce(), salt: generate_salt()});
+    }
+
+    records
 }
 
 /// Generate a nonce value use the AES GCM library. Returns the nonce as a

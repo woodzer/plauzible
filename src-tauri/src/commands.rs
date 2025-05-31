@@ -80,14 +80,39 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
 
 #[tauri::command]
 pub async fn store_record(password_hash_hex: String, record: String) -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
     let json = match json::parse(&record) {
         Ok(value) => value,
         Err(error) => return Err(format!("Failed to parse record value into JSON object. Cause: {:?}", error))
     };
+    let mut pool = database::connect_to_database().await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
     let data = utilities::encrypt(&password_hash_hex, &nonce_hex, &record).await?;
-    let record_id = database::write_record(&data).await?;
+
+    let mut transaction = match pool.begin().await {
+        Ok(t) => t,
+        Err(error) => return Err(format!("Failed to create a database transaction. Cause: {:?}", error))
+    };
+    let record_id = database::write_record_in_transaction(&mut transaction, &data).await?;
+
+    let mut minimum = 0_u8;
+    let maximum = 5_u8;
+    let total_records = database::count_total_records(&mut pool).await?;
+
+    if total_records == 0 {
+        minimum = maximum;
+    }
+
+    for record in utilities::generate_fake_records(record.len() as i64, minimum, maximum) {
+        let hashed_password = hash_password(record.salt).await?;
+        let encrypted_data = utilities::encrypt(&hashed_password, &record.nonce, &record.data).await?;
+        database::write_record_in_transaction(&mut transaction, &encrypted_data).await?;
+    }
+
+    match transaction.commit().await {
+        Err(error) => return Err(format!("Error committing database transaction. Cause: {:?}", error)),
+        _ => ()
+    };
+    
     let url = match json["url"].is_string() {
         true => json["url"].as_str().expect("URL string extraction failed."),
         _ => ""

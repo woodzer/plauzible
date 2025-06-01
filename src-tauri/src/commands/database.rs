@@ -13,6 +13,7 @@ const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) retu
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
+const UPDATE_RECORD_SQL: &str = "update data_records set data = ? where id = ?";
 
 #[derive(sqlx::FromRow)]
 pub struct DataRecord {id: i64, data: String}
@@ -239,6 +240,18 @@ pub fn remove_existing_database() -> Result<(), String> {
         },
         _ => Ok(())
     }
+}
+
+/// This function updates an existing record in the database.
+pub async fn update_record_by_id(pool: &mut Pool<Sqlite>, record_id: i64, data: &str) -> Result<(), String> {
+    match sqlx::query(UPDATE_RECORD_SQL)
+        .bind(data)
+        .bind(record_id)
+        .execute(&*pool).await {
+        Ok(_) => Ok(()),
+        Err(error) => Err(format!("Error updating record data. Cause: {:?}", error))
+    }
+
 }
 
 /// Writes data to the data_records database table. Returns the id of the record

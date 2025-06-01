@@ -101,6 +101,8 @@
             <h2 class="is-4 mt-5 title"><span class="create-title">Create</span><span class="is-hidden update-title">Update</span> Record</h2>
             <hr>
 
+            <input name="id" type="hidden">
+
             <div class="field">
                 <label class="label">Name</label>
                 <div class="control">
@@ -122,6 +124,7 @@
                 <label class="label">Password</label>
                 <div class="control">
                     <input class="input" name="password" placeholder="Enter the password for the record" type="password"/>
+                    <input class="input" name="passwordCopy" type="hidden"/>
                 </div>
                 <p class="help is-danger is-hidden">
                     You must enter a password for your record.
@@ -131,8 +134,11 @@
             <div class="field">
                 <label class="label">Site URL</label>
                 <div class="control">
-                    <input class="input" name="url" placeholder="Enter an URL for the site associated with this record" type="text"/>
+                    <input class="input" name="url" placeholder="Enter an URL for the site associated with this record" type="url"/>
                 </div>
+                <p class="help is-danger is-hidden">
+                    You must enter a valid URL.
+                </p>
             </div>
 
             <div class="field">

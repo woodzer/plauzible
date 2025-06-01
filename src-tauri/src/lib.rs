@@ -17,7 +17,8 @@ pub fn run() {
             commands::get_records_for_password,
             commands::hash_password,
             commands::initialize_application,
-            commands::store_record
+            commands::store_record,
+            commands::update_record
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

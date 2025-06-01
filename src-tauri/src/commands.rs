@@ -126,3 +126,30 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 
     Ok(json::stringify(object))
 }
+
+#[tauri::command]
+pub async fn update_record(password_hash_hex: String, record_id: i64, record: String) -> Result<String, String> {
+    let json = match json::parse(&record) {
+        Ok(value) => value,
+        Err(error) => return Err(format!("Failed to parse record value into JSON object. Cause: {:?}", error))
+    };
+    let mut pool = database::connect_to_database().await?;
+    let nonce_hex = database::get_nonce_string(&mut pool).await?;
+    let data = utilities::encrypt(&password_hash_hex, &nonce_hex, &record).await?;
+
+    database::update_record_by_id(&mut pool, record_id, &data).await?;
+    
+    let url = match json["url"].is_string() {
+        true => json["url"].as_str().expect("URL string extraction failed."),
+        _ => ""
+    };
+
+    let object = object!{
+        id: record_id,
+        data: data,
+        hasURL: url.trim() != "",
+        name: json["name"].clone()
+    };
+
+    Ok(json::stringify(object))
+}

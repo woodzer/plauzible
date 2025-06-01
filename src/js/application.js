@@ -3,11 +3,16 @@ const { invoke } = window.__TAURI__.core;
 import { camelCaseString } from "./utilities.js";
 
 const MINIMUM_PASSWORD_LENGTH = 10;
+const RECORD_PROPERTIES_TO_IGNORE = [];
 
 let settings = {
     passwordHash: null,
     records: []
 };
+
+function clearAllFormErrors(section) {
+    section.querySelectorAll(".field .help").forEach((element) => element.classList.add("is-hidden"));
+}
 
 function clearRecordListTable() {
     let recordListTable = document.querySelector(".record-list-table-body");
@@ -26,6 +31,8 @@ function createRecord(event) {
         if(settings.passwordHash) {
             let data = getRecordContent();
 
+            delete data.id;
+            delete data.passwordCopy;
             invoke("store_record", {passwordHashHex: settings.passwordHash, record: JSON.stringify(data)})
                 .then((output) => {
                     let listRecord = JSON.parse(output);
@@ -78,6 +85,7 @@ function editRecord(recordId) {
             .then((json) => {
                 let object = JSON.parse(json);
 
+                object.id = recordId;
                 resetForm("update");
                 populateRecordForm(object);
                 showSection("record_form");
@@ -106,10 +114,18 @@ function getRecordContent() {
     if(section) {
         record = {};
         section.querySelectorAll("input").forEach((field) => {
-            record[camelCaseString(field.name)] = field.value.trim();
+            let propertyName = camelCaseString(field.name);
+
+            if(!RECORD_PROPERTIES_TO_IGNORE.includes(propertyName)) {
+                record[propertyName] = field.value.trim();
+            }
         });
         section.querySelectorAll("textarea").forEach((field) => {
-            record[camelCaseString(field.name)] = field.value;
+            let propertyName = camelCaseString(field.name);
+
+            if(!RECORD_PROPERTIES_TO_IGNORE.includes(propertyName)) {
+                record[propertyName] = field.value;
+            }
         });
     } else {
         console.error("Unable to get record content as form section not found on the page.");
@@ -216,6 +232,8 @@ function populateRecordForm(record) {
                 field.value = "";
             }
         });
+
+        section.querySelector('input[name="passwordCopy"]').value = `${record.password}`;
     } else {
         console.error("Unable to locate the record form section on the page.");
     }
@@ -252,6 +270,7 @@ function resetForm(mode) {
     let section = document.querySelector("#record_form");
 
     if(section) {
+        clearAllFormErrors(section);
         section.querySelectorAll("input").forEach((field) => {
             field.value = "";
             hideFieldHelp(field);
@@ -328,6 +347,7 @@ function setupRecordForm() {
 
     if(section) {
         section.querySelector(".submit-record-create").addEventListener("click", createRecord);
+        section.querySelector(".submit-record-update").addEventListener("click", updateRecord);
         section.querySelectorAll(".cancel-record-form").forEach((element) => {
             element.addEventListener("click", () => {
                 resetForm("create");
@@ -470,20 +490,68 @@ function submitPassword(event) {
     }
 }
 
-function validateRecordForm() {
+function updateRecord(event) {
+    let record = getRecordContent();
+
+    event.preventDefault();
+    if(validateRecordForm(record.id)) {
+        if(settings.passwordHash) {
+            let recordId = parseInt(record.id);
+            let recordOffset = settings.records.findIndex((r) => r.id == recordId);
+
+            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: settings.records[recordOffset].data})
+                .then((recordJSON) => {
+                    let object = JSON.parse(recordJSON);
+
+                    if(record.password != record.passwordCopy) {
+                        if(!object.passwordHistory) {
+                            object.passwordHistory = [];
+                        }
+                        object.passwordHistory.push({changed: new Date(), password: record.passwordCopy});
+                    }
+
+                    delete record.id;
+                    delete record.passwordCopy;
+                    object = Object.assign(object, record)
+
+                    return(invoke("update_record", {passwordHashHex: settings.passwordHash, recordId: recordId, record: JSON.stringify(object)}));
+                })
+                .then((output) => {
+                    let listRecord = JSON.parse(output);
+
+                    settings.records[recordOffset] = listRecord;
+                    settings.record = settings.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
+                    populateRecordListTable();
+                    showSection("application_section")
+                        .then(() => {
+                            new Notify({
+                                status: "success",
+                                text: "Record successfully updated.",
+                                title: "Success"
+                            });
+                        });
+                })
+                .catch((error) => showError(`Record update failed. Cause: ${error}`));
+        } else {
+            showError("Call to update record failed because the password hash has not been set.");
+        }
+    }
+}
+
+function validateRecordForm(ignoreId) {
     let valid = true;
     let section = document.querySelector("#record_form");
 
     if(section) {
         let field = section.querySelector('input[name="name"]');
 
-
+        clearAllFormErrors(section);
         if(field) {
             let value = field.value.trim();
             if(value === "") {
                 valid = false;
             } else {
-                let found = settings.records.find((entry) => entry.name === value);
+                let found = settings.records.find((entry) => entry.name === value && `${entry.id}` !== `${ignoreId}`);
 
                 if(found) {
                     valid = false;
@@ -497,6 +565,12 @@ function validateRecordForm() {
 
         field = section.querySelector('input[name="password"]');
         if(field && field.value === "") {
+            valid = false;
+            showFieldHelp(field);
+        }
+
+        field = section.querySelector('input[name="url"]');
+        if(field && field.value.trim() !== "" && !field.checkValidity()) {
             valid = false;
             showFieldHelp(field);
         }

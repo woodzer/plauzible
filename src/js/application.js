@@ -88,7 +88,12 @@ function editRecord(recordId) {
                 object.id = recordId;
                 resetForm("update");
                 populateRecordForm(object);
-                showSection("record_form");
+                showSection("record_form")
+                    .then(() => {
+                        setTimeout(() => {
+                            document.querySelector('input[name="name"]').select();
+                        }, 250);
+                    });
             })
             .catch((error) => {
                 showError(error);

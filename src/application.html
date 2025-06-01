@@ -120,11 +120,26 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label class="label">Password</label>
-                <div class="control">
+            <label class="label">Password</label>
+            <div class="field has-addons">
+                <!-- <label class="label">Password</label> -->
+                <div class="control is-expanded">
                     <input class="input" name="password" placeholder="Enter the password for the record" type="password"/>
                     <input class="input" name="passwordCopy" type="hidden"/>
+                </div>
+                <div class="control">
+                    <button class="button generate-password uses-record-id" title="Generate password">
+                        <span class="icon is-small">
+                            <i class="fas fa-redo-alt"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="control">
+                    <button class="button copy-password uses-record-id" title="Copy password">
+                        <span class="icon is-small">
+                            <i class="far fa-clone"></i>
+                        </span>
+                    </button>
                 </div>
                 <p class="help is-danger is-hidden">
                     You must enter a password for your record.

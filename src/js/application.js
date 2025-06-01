@@ -1,4 +1,5 @@
 const { invoke } = window.__TAURI__.core;
+const { writeText } = window.__TAURI__.clipboardManager;
 
 import { camelCaseString } from "./utilities.js";
 
@@ -52,6 +53,41 @@ function createRecord(event) {
         } else {
             showError("Call to create record failed because the password hash has not been set.");
         }
+    }
+}
+
+function copyPasswordToTheClipboard(event) {
+    let target = event.target;
+    event.preventDefault();
+
+    if(!target.dataset.recordId) {
+        target = event.target.closest(".button") || event.target.closest(".icon");
+    }
+
+    if(target.dataset.recordId) {
+        let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
+
+        if(record) {
+            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
+                .then((json) => {
+                    let object = JSON.parse(json);
+                    return(writeText(object.password));
+                })
+                .then(() => {
+                    new Notify({
+                        status: "success",
+                        text: "Password copied to the clipboard.",
+                        title: "Success"
+                    });
+                })
+                .catch((error) => {
+                    showError(error);
+                });
+        } else {
+            console.error(`Unable to locate a record with an id of '${target.dataset.recordId}'.`);
+        }
+    } else {
+        console.error("Copy password element does not possess a record id data attribute.");
     }
 }
 
@@ -239,6 +275,7 @@ function populateRecordForm(record) {
         });
 
         section.querySelector('input[name="passwordCopy"]').value = `${record.password}`;
+        section.querySelectorAll(".uses-record-id").forEach((e) => e.dataset.recordId = record.id);
     } else {
         console.error("Unable to locate the record form section on the page.");
     }
@@ -359,8 +396,7 @@ function setupRecordForm() {
                 showSection("application_section");
             });
         });
-
-
+        section.querySelector("button.copy-password").addEventListener("click", copyPasswordToTheClipboard);
     } else {
         console.error("Failed to locate the record form section on the page.");
     }
@@ -384,7 +420,8 @@ function setupRowEventHandlers(row, record) {
 
     link = row.querySelector(".copy-password-link");
     if(link) {
-        console.log("Copy password link handler would be set up here!");
+        link.dataset.recordId = record.id;
+        link.addEventListener("click", copyPasswordToTheClipboard);
     }
 
     link = row.querySelector(".open-url-link");

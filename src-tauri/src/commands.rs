@@ -74,7 +74,7 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
             };
             Ok(response.dump())
         }
-        Err(message) => Err(message),
+        Err(message) => Err(message)
     }
 }
 
@@ -82,7 +82,12 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
 pub async fn store_record(password_hash_hex: String, record: String) -> Result<String, String> {
     let json = match json::parse(&record) {
         Ok(value) => value,
-        Err(error) => return Err(format!("Failed to parse record value into JSON object. Cause: {:?}", error))
+        Err(error) => {
+            return Err(format!(
+                "Failed to parse record value into JSON object. Cause: {:?}",
+                error
+            ))
+        }
     };
     let mut pool = database::connect_to_database().await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
@@ -90,7 +95,12 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 
     let mut transaction = match pool.begin().await {
         Ok(t) => t,
-        Err(error) => return Err(format!("Failed to create a database transaction. Cause: {:?}", error))
+        Err(error) => {
+            return Err(format!(
+                "Failed to create a database transaction. Cause: {:?}",
+                error
+            ))
+        }
     };
     let record_id = database::write_record_in_transaction(&mut transaction, &data).await?;
 
@@ -104,20 +114,26 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 
     for record in utilities::generate_fake_records(record.len() as i64, minimum, maximum) {
         let hashed_password = hash_password(record.salt).await?;
-        let encrypted_data = utilities::encrypt(&hashed_password, &record.nonce, &record.data).await?;
+        let encrypted_data =
+            utilities::encrypt(&hashed_password, &record.nonce, &record.data).await?;
         database::write_record_in_transaction(&mut transaction, &encrypted_data).await?;
     }
 
     match transaction.commit().await {
-        Err(error) => return Err(format!("Error committing database transaction. Cause: {:?}", error)),
+        Err(error) => {
+            return Err(format!(
+                "Error committing database transaction. Cause: {:?}",
+                error
+            ))
+        }
         _ => ()
     };
-    
+
     let url = match json["url"].is_string() {
         true => json["url"].as_str().expect("URL string extraction failed."),
-        _ => ""
+        _ => "",
     };
-    let object = object!{
+    let object = object! {
         id: record_id,
         data: data,
         hasURL: url.trim() != "",
@@ -128,23 +144,32 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 }
 
 #[tauri::command]
-pub async fn update_record(password_hash_hex: String, record_id: i64, record: String) -> Result<String, String> {
+pub async fn update_record(
+    password_hash_hex: String,
+    record_id: i64,
+    record: String,
+) -> Result<String, String> {
     let json = match json::parse(&record) {
         Ok(value) => value,
-        Err(error) => return Err(format!("Failed to parse record value into JSON object. Cause: {:?}", error))
+        Err(error) => {
+            return Err(format!(
+                "Failed to parse record value into JSON object. Cause: {:?}",
+                error
+            ))
+        }
     };
     let mut pool = database::connect_to_database().await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
     let data = utilities::encrypt(&password_hash_hex, &nonce_hex, &record).await?;
 
     database::update_record_by_id(&mut pool, record_id, &data).await?;
-    
+
     let url = match json["url"].is_string() {
         true => json["url"].as_str().expect("URL string extraction failed."),
-        _ => ""
+        _ => "",
     };
 
-    let object = object!{
+    let object = object! {
         id: record_id,
         data: data,
         hasURL: url.trim() != "",

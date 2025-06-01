@@ -1,17 +1,18 @@
-use std::str;
+use aes::cipher::generic_array::GenericArray;
 use aes_gcm::{
     aead::{Aead, AeadCore, OsRng},
-    Aes256Gcm,
-    Key,
-    KeyInit,
-    Nonce
+    Aes256Gcm, Key, KeyInit, Nonce,
 };
-use argon2::{Argon2, password_hash::SaltString};
-use aes::cipher::generic_array::GenericArray;
+use argon2::{password_hash::SaltString, Argon2};
 use hex;
 use rand::prelude::*;
+use std::str;
 
-pub struct FakeRecord {pub data: String, pub nonce: String, pub salt: String}
+pub struct FakeRecord {
+    pub data: String,
+    pub nonce: String,
+    pub salt: String,
+}
 
 /// Takes the application salt, nonce and user password and attempts to
 /// decrypt data specified as a hexidecimal string. Returns an Option that will
@@ -22,7 +23,7 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
         Ok(bytes) => bytes,
         Err(_) => {
             // Decoding of password hash from hex to bytes failed.
-            return None
+            return None;
         }
     };
     let key = Key::<Aes256Gcm>::from_slice(&hash_bytes);
@@ -34,7 +35,7 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
             return None;
         }
     };
-    let nonce: &GenericArray::<u8, typenum::U12> = Nonce::from_slice(nonce_bytes.as_slice());
+    let nonce: &GenericArray<u8, typenum::U12> = Nonce::from_slice(nonce_bytes.as_slice());
     let cipher_data: &[u8] = &match hex::decode(data) {
         Ok(bytes) => bytes,
         Err(_) => {
@@ -52,7 +53,7 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
                     None
                 }
             }
-        },
+        }
         Err(_) => {
             // Decryption was unsuccessful.
             None
@@ -64,22 +65,31 @@ pub async fn decrypt(password_hash: &str, nonce_hex: &str, data: &str) -> Option
 /// encrypt data specified as a string. Returns a Result. On success the
 /// result will contain a hexidecimal representation of the encrypted
 /// form of the data.
-pub async fn encrypt(password_hash_hex: &str, nonce_hex: &str, clear_text: &str) -> Result<String, String> {
+pub async fn encrypt(
+    password_hash_hex: &str,
+    nonce_hex: &str,
+    clear_text: &str,
+) -> Result<String, String> {
     let hash_bytes = match hex::decode(password_hash_hex) {
         Ok(bytes) => bytes,
-        Err(error) => return Err(format!("Error decoding password hash. Cause: {:?}", error))
+        Err(error) => return Err(format!("Error decoding password hash. Cause: {:?}", error)),
     };
     let key = Key::<Aes256Gcm>::from_slice(&hash_bytes);
     let cipher = Aes256Gcm::new(&key);
     let nonce_bytes = match hex::decode(nonce_hex) {
         Ok(bytes) => bytes,
-        Err(error) => return Err(format!("Failed to convert nonce to bytes. Cause: {:?}", error))
+        Err(error) => {
+            return Err(format!(
+                "Failed to convert nonce to bytes. Cause: {:?}",
+                error
+            ))
+        }
     };
     let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
     match cipher.encrypt(&nonce, clear_text.as_bytes()) {
         Ok(bytes) => Ok(hex::encode(bytes)),
-        Err(error) => Err(format!("Failed to encrypt data string. Cause: {:?}", error))
+        Err(error) => Err(format!("Failed to encrypt data string. Cause: {:?}", error)),
     }
 }
 
@@ -92,7 +102,10 @@ pub fn generate_password_hash<'a>(salt_b64: &'a str, password: &'a str) -> Resul
 
     match argon2.hash_password_into(full_password.as_bytes(), salt_b64.as_bytes(), &mut bytes) {
         Ok(_) => Ok(bytes.to_vec()),
-        Err(error) => Err(format!("Failed to generate password hash. Cause: {:?}", error))
+        Err(error) => Err(format!(
+            "Failed to generate password hash. Cause: {:?}",
+            error
+        )),
     }
 }
 
@@ -104,24 +117,35 @@ pub fn generate_password_hash<'a>(salt_b64: &'a str, password: &'a str) -> Resul
 /// percent larger. The minimum specifies the minimum number of strings to
 /// be generated and maximum is the maximum number of strings to be generated.
 /// The actual number generated will be somewhere between these two figures.
-pub fn generate_fake_record_data(base_size: i64, variation: f64, minimum: u8, maximum: u8) -> Vec<String> {
-   let mut strings = Vec::new();
-   let mut total_strings = maximum;
-   let mut generator = rand::rng();
+pub fn generate_fake_record_data(
+    base_size: i64,
+    variation: f64,
+    minimum: u8,
+    maximum: u8,
+) -> Vec<String> {
+    let mut strings = Vec::new();
+    let mut total_strings = maximum;
+    let mut generator = rand::rng();
 
-   if minimum != maximum {
-       total_strings = generator.random_range(minimum..=maximum);
-   }
+    if minimum != maximum {
+        total_strings = generator.random_range(minimum..=maximum);
+    }
 
-   while total_strings > 0 {
-       let size_factor = 1.0_f64 + generator.random_range(-variation..=variation);
-       let actual_size = ((base_size as f64 * size_factor) as i64) as usize;
+    while total_strings > 0 {
+        let size_factor = 1.0_f64 + generator.random_range(-variation..=variation);
+        let actual_size = ((base_size as f64 * size_factor) as i64) as usize;
 
-       strings.push((&mut generator).sample_iter(rand::distr::Alphanumeric).take(actual_size).map(char::from).collect());
-       total_strings = total_strings - 1;
-   }
+        strings.push(
+            (&mut generator)
+                .sample_iter(rand::distr::Alphanumeric)
+                .take(actual_size)
+                .map(char::from)
+                .collect(),
+        );
+        total_strings = total_strings - 1;
+    }
 
-   strings
+    strings
 }
 
 /// This function generates a collection of FakeRecord instances representing
@@ -131,7 +155,11 @@ pub fn generate_fake_records(base_size: i64, minimum: u8, maximum: u8) -> Vec<Fa
     let mut records = Vec::new();
 
     for data in generate_fake_record_data(base_size, 0.1_f64, minimum, maximum) {
-        records.push(FakeRecord {data: data, nonce: generate_nonce(), salt: generate_salt()});
+        records.push(FakeRecord {
+            data: data,
+            nonce: generate_nonce(),
+            salt: generate_salt(),
+        });
     }
 
     records

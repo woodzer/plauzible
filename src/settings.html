@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/fontawesome-5.9.0.min.css" />
+    <link rel="stylesheet" href="/css/bulma-1.0.4.min.css" />
+    <link rel="stylesheet" href="/css/simple_notify-1.0.5.min.css" />
+    <link rel="stylesheet" href="/css/application.css" />
+
+    <title>Plauzible - Settings</title>
+
+    <script src="/js/fontawesome-5.9.0.min.js" defer></script>
+    <script src="/js/simple_notify-1.0.5.min.js" defer></script>
+    <script type="module" src="/js/settings.js" defer></script>
+</head>
+
+<body>
+    <div class="container height-100pct pl-6 pr-6">
+        <section class="pt-6" id="loading_section">
+            <span class="close-button has-text-weight-bold is-size-2">
+                <a class="close" href="/application.html" title="Close">&times;</a>
+            </span>
+
+            <center class="mt-6">
+                <h2 class="is-4 title">Loading</h2>
+                <svg width="60" height="60" viewBox="0 0 44 44"><circle cx="22" cy="22" r="6" fill="none" stroke="#60A5FA" stroke-width="2"><animate attributeName="r" from="6" to="20" dur="1.5s" begin="0s" repeatCount="indefinite"></animate><animate attributeName="opacity" from="1" to="0" dur="1.5s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="22" cy="22" r="6" fill="none" stroke="#60A5FA" stroke-width="2"><animate attributeName="r" from="6" to="20" dur="1.5s" begin="0.5s" repeatCount="indefinite"></animate><animate attributeName="opacity" from="1" to="0" dur="1.5s" begin="0.5s" repeatCount="indefinite"></animate></circle></svg>
+            </center>
+        </section>
+
+        <section class="is-hidden" id="settings_section">
+            <span class="top-right-button">
+                <a href="/application.html" title="Close">
+                    <span class="icon">
+                        <i class="fa-lg fas fa-times"></i>
+                    </span>
+                </a>
+            </span>
+
+            <h1 class="is-3 mb-3 mt-3 title">Settings</h1>
+            <hr>
+
+            <section class="mb-6 remote-service-settings">
+                <h2 class="is-5 title">Remote Service Settings</h2>
+                <p class="content has-text-justified">
+                    These settings relate to the online Plauzible storage service.
+                    If you are using the online service you can enter your service
+                    key and URL in the fields below.
+                </p>
+
+                <div class="field">
+                    <label class="label">Service Key</label>
+                    <div class="control">
+                        <input class="input" name="serviceKey" placeholder="Enter a valid remote service key" type="password">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Service Provider URL</label>
+                    <div class="control">
+                        <input class="input" name="serviceURL" placeholder="Enter the base remote service URL" type="url" value="https://www.plauzible.com">
+                    </div>
+                </div>
+
+                <div class="buttons is-pulled-right mt-3">
+                    <button class="button update-service-settings">Update</button>
+                </div>
+            </section>
+            <br>
+
+            <section class="mb-5">
+                <h2 class="is-5 title">Encryption Settings</h2>
+                <p class="content has-text-justified">
+                    Your encryption settings contain details for parameters used to
+                    encrypt your records. This is sensitive information and should
+                    not be shared with anyone. If you wish to use Plauzible on more
+                    then one machine then you can must copy these details between
+                    the machines manually.
+                </p>
+
+                <div class="is-hidden" id="encryption_settings_details">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input" name="encryptionSettings" type="text">
+                        </div>
+                    </div>
+
+                    <div class="buttons is-pulled-right mt-3">
+                        <button class="button update-encryption-settings">Update</button>
+                        <button class="button hide-settings">Hide Settings</button>
+                    </div>
+                </div>
+
+                <div class="buttons is-pulled-right" id="encryption_settings_reveal">
+                    <button class="button is-danger reveal-settings">Reveal Settings</button>
+                </div>
+            </section>
+        </section>
+    </div>
+</body>
+</html>

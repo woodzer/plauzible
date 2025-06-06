@@ -1,6 +1,8 @@
 mod database;
 mod utilities;
 
+use json::JsonValue;
+
 #[tauri::command]
 pub fn delete_database() -> Result<(), String> {
     database::remove_existing_database()
@@ -27,6 +29,48 @@ pub fn get_database_path() -> String {
         Some(path) => path,
         _ => String::from("")
     }
+}
+
+#[tauri::command]
+pub async fn get_sensitive_settings() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let records = database::get_all_sensitive_settings(&mut pool).await?;
+    let mut array = JsonValue::new_array();
+
+    for record in records {
+        let object = object!{
+            id: record.id,
+            key: record.key,
+            value: record.value
+        };
+        match array.push(object) {
+            Err(error) => return Err(format!("Failed to store JSON object into array. Cause: {:?}", error)),
+            _ => ()
+        };
+    }
+
+    Ok(json::stringify(array))
+}
+
+#[tauri::command]
+pub async fn get_standard_settings() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let records = database::get_all_standard_settings(&mut pool).await?;
+    let mut array = JsonValue::new_array();
+
+    for record in records {
+        let object = object!{
+            id: record.id,
+            key: record.key,
+            value: record.value
+        };
+        match array.push(object) {
+            Err(error) => return Err(format!("Failed to store JSON object into array. Cause: {:?}", error)),
+            _ => ()
+        };
+    }
+
+    Ok(json::stringify(array))
 }
 
 #[tauri::command]
@@ -177,4 +221,25 @@ pub async fn update_record(
     };
 
     Ok(json::stringify(object))
+}
+
+#[tauri::command]
+pub async fn update_remove_service_settings(service_key: String, service_url: String) -> Result<(), String> {
+    let mut pool = database::connect_to_database().await?;
+    database::update_setting_by_name(&mut pool, "service.key", &service_key).await?;
+    database::update_setting_by_name(&mut pool, "service.url", &service_url).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_sensitive_settings(encryption_settings: String) -> Result<(), String> {
+    let parts = encryption_settings.split(":").collect::<Vec<&str>>();
+    if parts.len() != 2 {
+        return Err("Invalid encryption settings format.".to_string());
+    }
+
+    let mut pool = database::connect_to_database().await?;
+    database::update_setting_by_name(&mut pool, "encryption.salt", parts[0]).await?;
+    database::update_setting_by_name(&mut pool, "encryption.nonce", parts[1]).await?;
+    Ok(())
 }

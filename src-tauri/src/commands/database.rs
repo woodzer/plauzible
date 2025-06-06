@@ -13,19 +13,22 @@ const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) retu
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
+const GET_ALL_NON_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 0";
+const GET_ALL_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 1";
 const UPDATE_RECORD_SQL: &str = "update data_records set data = ? where id = ?";
+const UPDATE_SETTING_SQL: &str = "update settings set value = ? where key = ?";
 
 #[derive(sqlx::FromRow)]
 pub struct DataRecord {
-    id: i64,
-    data: String,
+    pub id: i64,
+    pub data: String,
 }
 
 #[derive(sqlx::FromRow)]
 pub struct SettingRecord {
-    id: i64,
-    key: String,
-    value: String,
+    pub id: i64,
+    pub key: String,
+    pub value: String,
 }
 
 /// This function looks for the database template file in the current working
@@ -100,6 +103,26 @@ pub async fn delete_record_by_id(record_id: i64) -> Result<i64, String> {
         Ok(_) => Ok(record_id),
         Err(error) => Err(format!("Error deleting record data. Cause: {:?}", error)),
     }
+}
+
+/// Fetches a list of all records in the settings database table with the
+/// sensitive flag set to true.
+pub async fn get_all_sensitive_settings(pool: &mut Pool<Sqlite>) -> Result<Vec<SettingRecord>, String> {
+    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_SENSITIVE_SETTINGS).fetch_all(& *pool).await {
+        Ok(list) => list,
+        Err(error) => return Err(format!("Error retrieving non-sensitive settings. Cause: {:?}", error)),
+    };
+    Ok(records)
+}
+
+/// Fetches a list of all records in the settings database table with the
+/// sensitive flag set to false.
+pub async fn get_all_standard_settings(pool: &mut Pool<Sqlite>) -> Result<Vec<SettingRecord>, String> {
+    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_NON_SENSITIVE_SETTINGS).fetch_all(& *pool).await {
+        Ok(list) => list,
+        Err(error) => return Err(format!("Error retrieving non-sensitive settings. Cause: {:?}", error)),
+    };
+    Ok(records)
 }
 
 /// This function attempts to locate the application database template file
@@ -178,7 +201,7 @@ pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
     };
 
     let mut objects = json::JsonValue::new_array();
-    let nonce_setting = match get_setting(&mut pool, "setting.nonce").await {
+    let nonce_setting = match get_setting(&mut pool, "encryption.nonce").await {
         Ok(setting) => setting,
         Err(error) => {
             return Err(format!(
@@ -227,7 +250,7 @@ pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
 }
 
 pub async fn get_nonce_string(pool: &mut Pool<Sqlite>) -> Result<String, String> {
-    match get_setting(pool, "setting.nonce").await {
+    match get_setting(pool, "encryption.nonce").await {
         Ok(record) => Ok(record.value),
         Err(message) => Err(message),
     }
@@ -236,7 +259,7 @@ pub async fn get_nonce_string(pool: &mut Pool<Sqlite>) -> Result<String, String>
 /// The function fetches the salt setting from the database and correctly converts
 /// it to a String that can be used to create a Salt instance.
 pub async fn get_salt_string(pool: &mut Pool<Sqlite>) -> Result<String, String> {
-    match get_setting(pool, "setting.salt").await {
+    match get_setting(pool, "encryption.salt").await {
         Ok(record) => match hex::decode(&record.value) {
             Ok(bytes) => match str::from_utf8(&bytes.as_slice()) {
                 Ok(base64_salt) => Ok(base64_salt.to_string()),
@@ -301,6 +324,19 @@ pub async fn update_record_by_id(
     {
         Ok(_) => Ok(()),
         Err(error) => Err(format!("Error updating record data. Cause: {:?}", error)),
+    }
+}
+
+/// Updates the value of a named setting in the application settings database table.
+pub async fn update_setting_by_name(pool: &mut Pool<Sqlite>, name: &str, value: &str) -> Result<(), String> {
+    match sqlx::query(UPDATE_SETTING_SQL)
+        .bind(value)
+        .bind(name)
+        .execute(&*pool)
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(error) => Err(format!("Error updating the {} setting data. Cause: {:?}", name, error)),
     }
 }
 

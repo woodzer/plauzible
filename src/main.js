@@ -1,14 +1,14 @@
 const { invoke } = window.__TAURI__.core;
 const Database = window.__TAURI__.sql;
 
-const NONCE_KEY = "setting.nonce";
-const SALT_KEY = "setting.salt";
-const SERVICE_KEY_KEY = "setting.service_key";
+const NONCE_KEY = "encryption.nonce";
+const SALT_KEY = "encryption.salt";
+const SERVICE_KEY_KEY = "service.key";
 const ALL_KEYS = [NONCE_KEY, SALT_KEY, SERVICE_KEY_KEY];
 
 const INSERT_CONFIGURATION_SQL = `
-    insert into settings(key, value)
-    values($1, $2)
+    insert into settings(key, value, sensitive)
+    values($1, $2, $3)
 `;
 
 function addBaseSettings(settings) {
@@ -17,31 +17,15 @@ function addBaseSettings(settings) {
 
     console.log(`Database URL: ${databaseURL}`);
     Database.load(databaseURL)
-        // .then((connection) => {
-        //     let promises = [];
-
-        //     database = connection;
-        //     promises.push(new Promise((resolve, reject) => {
-        //         connection.execute(INSERT_CONFIGURATION_SQL, [NONCE_KEY, settings.nonce]).then(resolve);
-        //     }));
-        //     promises.push(new Promise((resolve, reject) => {
-        //         connection.execute(INSERT_CONFIGURATION_SQL, [SALT_KEY, settings.salt]).then(resolve);
-        //     }));
-        //     promises.push(new Promise((resolve, reject) => {
-        //         connection.execute(INSERT_CONFIGURATION_SQL, [SERVICE_KEY_KEY, settings.serviceKey]).then(resolve);
-        //     }));
-
-        //     return(Promise.all(promises));
-        // })
         .then((c) => {
             connection = c;
-            return connection.execute(INSERT_CONFIGURATION_SQL, [NONCE_KEY, settings.nonce])
+            return connection.execute(INSERT_CONFIGURATION_SQL, [NONCE_KEY, settings.nonce, 1])
         })
         .then(() => {
-            return connection.execute(INSERT_CONFIGURATION_SQL, [SALT_KEY, settings.salt]);
+            return connection.execute(INSERT_CONFIGURATION_SQL, [SALT_KEY, settings.salt, 1]);
         })
         .then(() => {
-            return connection.execute(INSERT_CONFIGURATION_SQL, [SERVICE_KEY_KEY, settings.serviceKey]);
+            return connection.execute(INSERT_CONFIGURATION_SQL, [SERVICE_KEY_KEY, settings.serviceKey, 0]);
         })
         .then(() => {
             console.log("Base settings successfully stored.");

@@ -1,14 +1,15 @@
 const { invoke } = window.__TAURI__.core;
 const { writeText } = window.__TAURI__.clipboardManager;
 
-import { camelCaseString } from "./utilities.js";
+import { camelCaseString, showError, showSuccess } from "./utilities.js";
 
 const MINIMUM_PASSWORD_LENGTH = 10;
 const RECORD_PROPERTIES_TO_IGNORE = [];
 
 let settings = {
     passwordHash: null,
-    records: []
+    records: [],
+    timeoutFunction: null
 };
 
 function clearAllFormErrors(section) {
@@ -28,6 +29,7 @@ function clearRecordListTable() {
 
 function createRecord(event) {
     event.preventDefault();
+    touchTimeout();
     if(validateRecordForm()) {
         if(settings.passwordHash) {
             let data = getRecordContent();
@@ -42,11 +44,7 @@ function createRecord(event) {
                     populateRecordListTable();
                     showSection("application_section")
                         .then(() => {
-                            new Notify({
-                                status: "success",
-                                text: "Record successfully created.",
-                                title: "Success"
-                            });
+                            showSuccess("Record successfully created.");
                         });
                 })
                 .catch((error) => showError(`Record creation failed. Cause: ${error}`));
@@ -58,8 +56,9 @@ function createRecord(event) {
 
 function copyPasswordToTheClipboard(event) {
     let target = event.target;
-    event.preventDefault();
 
+    event.preventDefault();
+    touchTimeout();
     if(!target.dataset.recordId) {
         target = event.target.closest(".button") || event.target.closest(".icon");
     }
@@ -74,11 +73,7 @@ function copyPasswordToTheClipboard(event) {
                     return(writeText(object.password));
                 })
                 .then(() => {
-                    new Notify({
-                        status: "success",
-                        text: "Password copied to the clipboard.",
-                        title: "Success"
-                    });
+                    showSuccess("Password copied to the clipboard.");
                 })
                 .catch((error) => {
                     showError(error);
@@ -95,6 +90,7 @@ function deleteRecord(event) {
     let modal = document.querySelector("#delete_confirmation_modal");
 
     event.preventDefault();
+    touchTimeout();
     if(modal) {
         let source = event.target;
 
@@ -116,6 +112,7 @@ function deleteRecord(event) {
 function editRecord(recordId) {
     let record = settings.records.find((record) => record.id === recordId);
 
+    touchTimeout();
     if(record) {
         invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
             .then((json) => {
@@ -141,11 +138,15 @@ function editRecord(recordId) {
 }
 
 function endSession(event) {
-    event.preventDefault();
+    if(event) {
+        event.preventDefault();
+    }
+
     settings.passwordHash = null;
     settings.records = [];
     clearRecordListTable();
     showPasswordSection();
+    settings.timeoutFunction = null;
 }
 
 function getRecordContent() {
@@ -223,12 +224,14 @@ function initializeApplication() {
     setupRecordForm();
     setupNavigationBar();
     showPasswordSection();
+    touchTimeout();
 }
 
 function onDeleteRecordConfirmed(event) {
     let source = event.target;
 
     event.preventDefault();
+    touchTimeout();
     if(source.dataset.recordId) {
         let recordId = parseInt(source.dataset.recordId);
 
@@ -444,16 +447,6 @@ function showApplicationSection(passwordHash) {
     });
 }
 
-function showError(message) {
-    console.error("ERROR:", message);
-    new Notify({
-        autotimeout: 10000,
-        status: "error",
-        text: message,
-        title: "Error"
-    });
-}
-
 function showFieldHelp(element) {
     let field = element.closest(".field");
 
@@ -514,6 +507,7 @@ function submitPassword(event) {
     let passwordField = document.querySelector('input[name="password"]');
 
     event.preventDefault();
+    touchTimeout();
     if(passwordField) {
         let passwordValue = passwordField.value;
 
@@ -532,10 +526,18 @@ function submitPassword(event) {
     }
 }
 
+function touchTimeout() {
+    if(settings.timeoutFunction) {
+        clearTimeout(settings.timeoutFunction);
+    }
+    settings.timeoutFunction = setTimeout(() => endSession(null), 600000);
+}
+
 function updateRecord(event) {
     let record = getRecordContent();
 
     event.preventDefault();
+    touchTimeout();
     if(validateRecordForm(record.id)) {
         if(settings.passwordHash) {
             let recordId = parseInt(record.id);
@@ -566,11 +568,7 @@ function updateRecord(event) {
                     populateRecordListTable();
                     showSection("application_section")
                         .then(() => {
-                            new Notify({
-                                status: "success",
-                                text: "Record successfully updated.",
-                                title: "Success"
-                            });
+                            showSuccess("Record successfully updated.");
                         });
                 })
                 .catch((error) => showError(`Record update failed. Cause: ${error}`));

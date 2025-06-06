@@ -14,6 +14,27 @@ function camelCaseString(inputText) {
         .join(""));
 }
 
+
+function showError(message) {
+    console.error("ERROR:", message);
+    new Notify({
+        autotimeout: 10000,
+        status: "error",
+        text: message,
+        title: "Error"
+    });
+}
+
+function showSuccess(message) {
+    new Notify({
+        status: "success",
+        text: message,
+        title: "Success"
+    });
+}
+
 export {
-    camelCaseString
+    camelCaseString,
+    showError,
+    showSuccess
 };

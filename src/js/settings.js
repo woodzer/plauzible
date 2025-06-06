@@ -1,0 +1,166 @@
+const { invoke } = window.__TAURI__.core;
+
+
+import { showError, showSuccess } from "./utilities.js";
+
+function hideSensitiveSettings(event) {
+    let fieldSection = document.querySelector("#encryption_settings_details");
+    let field = fieldSection.querySelector('input[name="encryptionSettings"]');
+    let buttons = document.querySelector("#encryption_settings_reveal");
+
+    event.preventDefault();
+    field.value = "";
+    fieldSection.classList.add("is-hidden");
+    buttons.classList.remove("is-hidden");
+    fieldSection.querySelector("button.update-encryption-settings").disabled = true;
+}
+
+function initializeSettings() {
+    console.log("Initializing the settings user interface.");
+    setUpEventHandlers();
+    invoke("get_standard_settings")
+        .then((json) => {
+            let records = JSON.parse(json);
+
+            console.log("Record:", records);
+            populateSettings(records);
+            showSettings();
+        })
+        .catch((error) => showError(`Failed to load setting values. Cause: ${error}`));
+}
+
+function populateSettings(records) {
+    let field = document.querySelector('input[name="serviceKey"]');
+    let record = records.find((r) => r.key === "service.key");
+
+    if(field && record) {
+        field.value = record.value;
+    }
+
+    field = document.querySelector('input[name="serviceURL"]');
+    record = records.find((r) => r.key === "service.url");
+    if(field && record) {
+        field.value = record.value;
+    }
+
+    let button = document.querySelector("button.update-encryption-settings")
+    button.disabled = true;
+}
+
+function setUpEventHandlers() {
+    let element = document.querySelector("button.reveal-settings");
+
+    if(element) {
+        element.addEventListener("click", showSensitiveSettings);
+    }
+
+    element = document.querySelector("#encryption_settings_details");
+    if(element) {
+        element.querySelector("button.hide-settings").addEventListener("click", hideSensitiveSettings);
+    }
+
+    let button = document.querySelector("button.update-encryption-settings");
+    if(button) {
+        button.addEventListener("click", updateEncryptionSettings);
+    }
+
+    element = document.querySelector('input[name="encryptionSettings"]');
+    if(element) {
+        element.addEventListener("input", () => {
+            document.querySelector("button.update-encryption-settings").disabled = false;
+        });
+    }
+
+    button = document.querySelector("button.update-service-settings");
+    if(button) {
+        button.addEventListener("click", updateRemoteServiceSettings);
+    }
+}
+
+function showLoading() {
+    let sections = [document.querySelector("#loading_section"),
+                    document.querySelector("#settings_section")];
+
+    sections[1].classList.add("is-hidden");
+    sections[0].classList.remove("is-hidden");
+}
+
+function showSensitiveSettings(event) {
+    let button = event.target;
+
+    event.preventDefault();
+    invoke("get_sensitive_settings")
+        .then((json) => {
+            let records = JSON.parse(json);
+            let fieldSection = document.querySelector("#encryption_settings_details");
+            let field = fieldSection.querySelector('input[name="encryptionSettings"]');
+
+            console.log("Records:", records);
+            let salt = records.find((e) => e.key === "encryption.salt").value;
+            let nonce = records.find((e) => e.key === "encryption.nonce").value;
+            field.value = `${salt}:${nonce}`;
+
+            button.parentNode.classList.add("is-hidden");
+            fieldSection.classList.remove("is-hidden");
+        })
+        .catch((error) => showError(`Failed to load sensitive setting values, Cause: ${error}`));
+}
+
+function showSettings() {
+    let sections = [document.querySelector("#loading_section"),
+                    document.querySelector("#settings_section")];
+
+    sections[0].classList.add("is-hidden");
+    sections[1].classList.remove("is-hidden");
+}
+
+function updateEncryptionSettings(event) {
+    let field = document.querySelector('input[name="encryptionSettings"]');
+    let button = event.target;
+
+    event.preventDefault();
+    button.disabled = true;
+    if(validateEncryptionSettings(field.value)) {
+        invoke("update_sensitive_settings", {
+            encryptionSettings: field.value
+        })
+        .then(() => {
+            hideSensitiveSettings(event);
+            showSuccess("Encryption settings successfully updated.");
+        })
+        .catch((error) => showError(`Failed to update encryption settings. Cause: ${error}`));
+    }
+}
+
+function updateRemoteServiceSettings(event) {
+    let section = document.querySelector("section.remote-service-settings");
+
+    event.preventDefault();
+    if(section) {
+        let serviceKeyField = section.querySelector('input[name="serviceKey"]');
+        let serviceURLField = section.querySelector('input[name="serviceURL"]');
+
+        invoke("update_remove_service_settings", {
+            serviceKey: serviceKeyField.value,
+            serviceUrl: serviceURLField.value
+        })
+        .then(() => {
+            showSuccess("Remote service settings successfully updated.");
+        })
+        .catch((error) => showError(`Failed to update remote service settings. Cause: ${error}`));
+    }
+}
+
+function validateEncryptionSettings(value) {
+    let valid = true;
+    if(value.indexOf(":") === -1) {
+        showError("Your encryption settings are not valid.");
+        valid = false;
+    }
+    return valid;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("Settings starting...");
+    initializeSettings();
+});

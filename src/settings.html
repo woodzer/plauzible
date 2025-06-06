@@ -29,7 +29,7 @@
             </center>
         </section>
 
-        <section class="is-hidden" id="settings_section">
+        <section class="is-hidden mb-6 pb-6" id="settings_section">
             <span class="top-right-button">
                 <a href="/application.html" title="Close">
                     <span class="icon">
@@ -69,6 +69,39 @@
             </section>
             <br>
 
+            <section class="mb-6 password-generator-settings">
+                <h2 class="is-5 title">Password Generator Settings</h2>
+                <p class="content has-text-justified">
+                    These settings relate to the password generation process.
+                </p>
+
+                <div class="field">
+                    <label class="label">Password Length</label>
+                    <div class="control">
+                        <input class="input" name="passwordLength" placeholder="Enter the length of the generated passwords" type="number" value="12">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Default Character Set</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select name="defaultCharacterSet">
+                                <option value="alphanumeric_lower">Alphanumeric (Lower Case)</option>
+                                <option value="alphanumeric_upper">Alphanumeric (Upper Case)</option>
+                                <option value="alphanumeric_mixed">Alphanumeric (Mixed Case)</option>
+                                <option value="alphanumeric_mixed_symbols">Alphanumeric + Symbols (Mixed Case)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons is-pulled-right mt-3">
+                    <button class="button update-password-generator-settings">Update</button>
+                </div>
+            </section>
+            <br>
+
             <section class="mb-5">
                 <h2 class="is-5 title">Encryption Settings</h2>
                 <p class="content has-text-justified">
@@ -96,7 +129,9 @@
                     <button class="button is-danger reveal-settings">Reveal Settings</button>
                 </div>
             </section>
+            <br>
         </section>
+        <br>
     </div>
 </body>
 </html>

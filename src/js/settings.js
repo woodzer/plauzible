@@ -45,6 +45,18 @@ function populateSettings(records) {
 
     let button = document.querySelector("button.update-encryption-settings")
     button.disabled = true;
+
+    field = document.querySelector('input[name="passwordLength"]');
+    record = records.find((r) => r.key === "password.length");
+    if(field && record) {
+        field.value = parseInt(record.value);
+    }
+
+    field = document.querySelector('select[name="defaultCharacterSet"]');
+    record = records.find((r) => r.key === "password.character_set");
+    if(field && record) {
+        field.value = record.value;
+    }
 }
 
 function setUpEventHandlers() {
@@ -74,6 +86,11 @@ function setUpEventHandlers() {
     button = document.querySelector("button.update-service-settings");
     if(button) {
         button.addEventListener("click", updateRemoteServiceSettings);
+    }
+
+    button = document.querySelector("button.update-password-generator-settings");
+    if(button) {
+        button.addEventListener("click", updatePasswordGeneratorSettings);
     }
 }
 
@@ -132,6 +149,26 @@ function updateEncryptionSettings(event) {
     }
 }
 
+function updatePasswordGeneratorSettings(event) {
+    let section = document.querySelector("section.password-generator-settings");
+
+    event.preventDefault();
+    if(section) {
+        let passwordLengthField = section.querySelector('input[name="passwordLength"]');
+        let defaultCharacterSetField = section.querySelector('select[name="defaultCharacterSet"]');
+
+        invoke("update_password_generator_settings", {
+            passwordLength: parseInt(passwordLengthField.value),
+            defaultCharacterSet: defaultCharacterSetField.value
+        })
+        .then(() => {
+            showSuccess("Password generator settings successfully updated.");
+        })
+        .catch((error) => showError(`Failed to update password generator settings. Cause: ${error}`));
+    }
+
+}
+
 function updateRemoteServiceSettings(event) {
     let section = document.querySelector("section.remote-service-settings");
 
@@ -140,7 +177,7 @@ function updateRemoteServiceSettings(event) {
         let serviceKeyField = section.querySelector('input[name="serviceKey"]');
         let serviceURLField = section.querySelector('input[name="serviceURL"]');
 
-        invoke("update_remove_service_settings", {
+        invoke("update_remote_service_settings", {
             serviceKey: serviceKeyField.value,
             serviceUrl: serviceURLField.value
         })

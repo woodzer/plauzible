@@ -2,6 +2,7 @@ mod database;
 mod utilities;
 
 use json::JsonValue;
+use rand::prelude::*;
 
 #[tauri::command]
 pub fn delete_database() -> Result<(), String> {
@@ -123,6 +124,18 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
 }
 
 #[tauri::command]
+pub async fn select_random_characters(text: String, length: i32) -> Result<String, String> {
+    let mut rng = rand::rng();
+    let mut output = String::new();
+
+    for _ in 0..length {
+        output.push(text.chars().choose(&mut rng).unwrap());
+    }
+
+    Ok(output)
+}
+
+#[tauri::command]
 pub async fn store_record(password_hash_hex: String, record: String) -> Result<String, String> {
     let json = match json::parse(&record) {
         Ok(value) => value,
@@ -224,7 +237,15 @@ pub async fn update_record(
 }
 
 #[tauri::command]
-pub async fn update_remove_service_settings(service_key: String, service_url: String) -> Result<(), String> {
+pub async fn update_password_generator_settings(password_length: i64, default_character_set: String) -> Result<(), String> {
+    let mut pool = database::connect_to_database().await?;
+    database::update_setting_by_name(&mut pool, "password.length", &password_length.to_string()).await?;
+    database::update_setting_by_name(&mut pool, "password.character_set", &default_character_set).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_remote_service_settings(service_key: String, service_url: String) -> Result<(), String> {
     let mut pool = database::connect_to_database().await?;
     database::update_setting_by_name(&mut pool, "service.key", &service_key).await?;
     database::update_setting_by_name(&mut pool, "service.url", &service_url).await?;

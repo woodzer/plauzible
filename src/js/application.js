@@ -1,7 +1,7 @@
 const { invoke } = window.__TAURI__.core;
 const { writeText } = window.__TAURI__.clipboardManager;
 
-import { camelCaseString, showError, showSuccess } from "./utilities.js";
+import { camelCaseString, CHARACTER_SETS, showError, showSuccess } from "./utilities.js";
 
 const MINIMUM_PASSWORD_LENGTH = 10;
 const RECORD_PROPERTIES_TO_IGNORE = [];
@@ -149,6 +149,30 @@ function endSession(event) {
     settings.timeoutFunction = null;
 }
 
+function generatePassword(event) {
+    let modal = document.querySelector("#password_generator_modal");
+
+    event.preventDefault();
+    touchTimeout();
+    if(modal) {
+        let passwordLength = parseInt(modal.querySelector('input[name="passwordLength"]').value);
+        let characterSetKey = modal.querySelector('select[name="characterSet"]').value;
+        let characterSet = CHARACTER_SETS[characterSetKey];
+
+        console.log(`Password length: ${passwordLength}`);
+        console.log(`Character set: ${characterSet}`);
+        invoke("select_random_characters", {text: characterSet, length: passwordLength})
+            .then((output) => {
+                modal.querySelector('input[name="generatedPassword"]').value = output;
+                modal.querySelector("button.submit-button").disabled = false;
+            })
+            .catch((error) => showError(`Failed to generate password. Cause: ${error}`));
+    } else {
+        console.error("Unable to locate the password generator modal on the page.");
+    }
+}
+
+
 function getRecordContent() {
     let record = null;
     let section = document.querySelector("#record_form");
@@ -250,6 +274,36 @@ function onDeleteRecordConfirmed(event) {
         }
     } else {
         showError("Unable to delete the specified entry, record id not found. Please contact support.");
+    }
+}
+
+function openPasswordGeneratorModal(event) {
+    let modal = document.querySelector("#password_generator_modal");
+
+    event.preventDefault();
+    touchTimeout();
+    modal.querySelector("button.submit-button").disabled = true;
+    if(modal) {
+        invoke("get_standard_settings")
+            .then((data) => {
+                let object = JSON.parse(data);
+                let setting = object.find((s) => s.key === "password.length");
+
+                if(setting) {
+                    modal.querySelector('input[name="passwordLength"]').value = parseInt(setting.value);
+                }
+
+                setting = object.find((s) => s.key === "password.character_set");
+                if(setting) {
+                    modal.querySelector('select[name="characterSet"]').value = setting.value;
+                }
+
+                modal.querySelector('input[name="generatedPassword"]').value = "";
+                modal.classList.add("is-active");
+            })
+            .catch((error) => showError(`Failed to get password settings. Cause: ${error}`));
+    } else {
+        console.error("Unable to locate the password generator modal on the page.");
     }
 }
 
@@ -355,6 +409,21 @@ function setupModals() {
     if(modal) {
         modal.querySelector("button.submit-button").addEventListener("click", onDeleteRecordConfirmed);
     }
+
+    modal = document.querySelector("#password_generator_modal");
+    if(modal) {
+        modal.querySelector("button.generate-password-button").addEventListener("click", generatePassword);
+        document.querySelectorAll("button.open-password-generator").forEach((element) => {
+            element.addEventListener("click", openPasswordGeneratorModal);
+        });
+
+        let field = modal.querySelector('input[name="generatedPassword"');
+        field.addEventListener("change", (event) => {
+            modal.querySelector("button.submit-button").disabled = (field.value === "");
+        });
+
+        modal.querySelector("button.submit-button").addEventListener("click", useGeneratedPassword);
+    }
 }
 
 function setupNavigationBar() {
@@ -375,7 +444,7 @@ function setupPasswordHandling() {
     let passwordSection = document.querySelector("#password_section");
 
     if(passwordSection) {
-        password_section.querySelector('input[name="password"]').addEventListener("keypress", (event) => {
+        passwordSection.querySelector('input[name="sessionPassword"]').addEventListener("keypress", (event) => {
             const keyCode = event.code || event.key;
             if(keyCode === 'Enter') {
                 submitPassword(event);
@@ -474,12 +543,12 @@ function showRecordFormSection() {
 function showPasswordSection() {
     return(showSection("password_section")
         .then((section) => {
-            let passwordField = section.querySelector('input[name="password"]');
+            let passwordField = section.querySelector('input[name="sessionPassword"]');
 
             if(passwordField) {
                 hideFieldHelp(passwordField);
                 setTimeout(() => {
-                    let passwordField = section.querySelector('input[name="password"]');
+                    let passwordField = section.querySelector('input[name="sessionPassword"]');
 
                     if(passwordField) {
                         passwordField.focus();
@@ -504,7 +573,7 @@ function showSection(sectionName) {
 }
 
 function submitPassword(event) {
-    let passwordField = document.querySelector('input[name="password"]');
+    let passwordField = document.querySelector('input[name="sessionPassword"]');
 
     event.preventDefault();
     touchTimeout();
@@ -531,6 +600,24 @@ function touchTimeout() {
         clearTimeout(settings.timeoutFunction);
     }
     settings.timeoutFunction = setTimeout(() => endSession(null), 600000);
+}
+
+function useGeneratedPassword(event) {
+    let modal = document.querySelector("#password_generator_modal");
+
+    event.preventDefault();
+    touchTimeout();
+    if(modal) {
+        let generatedPasswordField = document.querySelector('input[name="generatedPassword"]');
+        let passwordField = document.querySelector('input[name="password"]');
+
+        if(generatedPasswordField && passwordField) {
+            passwordField.value = generatedPasswordField.value;
+            generatedPasswordField.value = "";
+            modal.querySelector("button.submit-button").disabled = true;
+            modal.classList.remove("is-active");
+        }
+    }
 }
 
 function updateRecord(event) {

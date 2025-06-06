@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate json;
 
+
 mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,9 +21,11 @@ pub fn run() {
             commands::has_been_initialized,
             commands::hash_password,
             commands::initialize_application,
+            commands::select_random_characters,
             commands::store_record,
+            commands::update_password_generator_settings,
             commands::update_record,
-            commands::update_remove_service_settings,
+            commands::update_remote_service_settings,
             commands::update_sensitive_settings
         ])
         .run(tauri::generate_context!())

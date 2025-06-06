@@ -46,7 +46,7 @@
                             <div class="field">
                                 <label class="label">Password</label>
                                 <div class="component">
-                                    <input class="input" name="password" placeholder="Enter a session password" type="password"/>
+                                    <input class="input" name="sessionPassword" placeholder="Enter a session password" type="password"/>
                                 </div>
                                 <p class="help is-danger is-hidden">
                                     A password must be provided and must be a minimum of 10 characters in length.
@@ -136,7 +136,7 @@
                     <input class="input" name="passwordCopy" type="hidden"/>
                 </div>
                 <div class="control">
-                    <button class="button generate-password uses-record-id" title="Generate password">
+                    <button class="button open-password-generator uses-record-id" title="Generate password">
                         <span class="icon is-small">
                             <i class="fas fa-redo-alt"></i>
                         </span>
@@ -203,6 +203,65 @@
                 </footer>
             </div>
         </div>
+
+        <!-- Password Generator Modal -->
+        <div class="modal" id="password_generator_modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Password Generator</p>
+                    <button class="delete cancel-modal"></button>
+                </header>
+
+                <section class="modal-card-body">
+
+                    <div class="columns">
+                        <div class="column is-half">
+                            <div class="field">
+                                <label class="label">Password Length</label>
+                                <div class="control">
+                                    <input class="input" name="passwordLength" placeholder="Enter the length of the generated password" type="number"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Character Set</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select class="select is-expanded" name="characterSet">
+                                            <option value="alphanumeric_lower">Alphanumeric (Lower Case)</option>
+                                            <option value="alphanumeric_upper">Alphanumeric (Upper Case)</option>
+                                            <option value="alphanumeric_mixed">Alphanumeric (Mixed Case)</option>
+                                            <option value="alphanumeric_mixed_symbols">Alphanumeric + Symbols (Mixed Case)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <div class="control">
+                            <input class="input" name="generatedPassword" placeholder="Generated password will appear here" readonly type="text"/>
+                        </div>
+                    </div>
+
+                    <div class="buttons is-pulled-right">
+                        <button class="button generate-password-button">Generate</button>
+                    </div>
+                </section>
+
+                <footer class="modal-card-foot">
+                    <div class="buttons">
+                        <button class="button is-success submit-button">Use Password</button>
+                        <button class="button cancel-modal">Cancel</button>
+                    </div>
+                </footer>
+            </div>
+           </div>
     </div>
 
     <div class="is-hidden" id="templates_container">

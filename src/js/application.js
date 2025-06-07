@@ -86,6 +86,34 @@ function copyPasswordToTheClipboard(event) {
     }
 }
 
+function copyUserNameToTheClipboard(event) {
+    let target = event.target;
+
+    event.preventDefault();
+    touchTimeout();
+    if(!target.dataset.recordId) {
+        target = event.target.closest(".button") || event.target.closest(".icon");
+    }
+
+    if(target.dataset.recordId) {
+        let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
+
+        if(record) {
+            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
+                .then((json) => {
+                    let object = JSON.parse(json);
+                    return(writeText(object.userName));
+                })
+                .then(() => {
+                    showSuccess("User name copied to the clipboard.");
+                })
+                .catch((error) => {
+                    showError(error);
+                });
+        }
+    }
+}
+
 function deleteRecord(event) {
     let modal = document.querySelector("#delete_confirmation_modal");
 
@@ -499,6 +527,7 @@ function setupRecordForm() {
                 showSection("application_section");
             });
         });
+        section.querySelector("button.copy-user-name").addEventListener("click", copyUserNameToTheClipboard);
         section.querySelector("button.copy-password").addEventListener("click", copyPasswordToTheClipboard);
         section.querySelector("button.open-url-link").addEventListener("click", (event) => {
             event.preventDefault();

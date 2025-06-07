@@ -21,6 +21,7 @@ pub fn run() {
             commands::has_been_initialized,
             commands::hash_password,
             commands::initialize_application,
+            commands::open_url,
             commands::select_random_characters,
             commands::store_record,
             commands::update_password_generator_settings,

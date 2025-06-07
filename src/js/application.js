@@ -251,6 +251,10 @@ function initializeApplication() {
     touchTimeout();
 }
 
+function launchURL(url) {
+    return(invoke("open_url", {url: url}));
+}
+
 function onDeleteRecordConfirmed(event) {
     let source = event.target;
 
@@ -274,6 +278,33 @@ function onDeleteRecordConfirmed(event) {
         }
     } else {
         showError("Unable to delete the specified entry, record id not found. Please contact support.");
+    }
+}
+
+function onLaunchURL(event) {
+    let target = event.target;
+
+    event.preventDefault();
+    touchTimeout();
+    if(!target.dataset.recordId) {
+        target = event.target.closest(".button") || event.target.closest(".icon");
+    }
+
+    if(target.dataset.recordId) {
+        let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
+
+        if(record) {
+            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
+                .then((json) => {
+                    let object = JSON.parse(json);
+                    return(launchURL(object.url));
+                })
+                .catch((error) => showError(`Failed to open URL. Cause: ${error}`));
+        } else {
+            console.error(`Unable to locate a record with an id of '${target.dataset.recordId}'.`);
+        }
+    } else {
+        console.error("Copy password element does not possess a record id data attribute.");
     }
 }
 
@@ -469,6 +500,15 @@ function setupRecordForm() {
             });
         });
         section.querySelector("button.copy-password").addEventListener("click", copyPasswordToTheClipboard);
+        section.querySelector("button.open-url-link").addEventListener("click", (event) => {
+            event.preventDefault();
+            touchTimeout();
+            let urlField = section.querySelector('input[name="url"]');
+
+            if(urlField && urlField.value.trim() !== "") {
+                launchURL(urlField.value);
+            }
+        });
     } else {
         console.error("Failed to locate the record form section on the page.");
     }
@@ -499,7 +539,8 @@ function setupRowEventHandlers(row, record) {
     link = row.querySelector(".open-url-link");
     if(link) {
         if(record.hasURL) {
-            console.log("Open URL link handler would be set up here!");
+            link.dataset.recordId = record.id;
+            link.addEventListener("click", onLaunchURL);
         } else {
             link.classList.add("is-hidden");
         }

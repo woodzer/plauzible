@@ -124,6 +124,12 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
 }
 
 #[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    let _ = open::that(url).map_err(|error| format!("Failed to open URL. Cause: {:?}", error));
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn select_random_characters(text: String, length: i32) -> Result<String, String> {
     let mut rng = rand::rng();
     let mut output = String::new();

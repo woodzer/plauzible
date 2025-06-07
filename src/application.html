@@ -154,10 +154,17 @@
                 </p>
             </div>
 
-            <div class="field">
-                <label class="label">Site URL</label>
-                <div class="control">
+            <label class="label">Site URL</label>
+            <div class="field has-addons">
+                <div class="control is-expanded">
                     <input class="input" name="url" placeholder="Enter an URL for the site associated with this record" type="url"/>
+                </div>
+                <div class="control">
+                    <button class="button open-url-link uses-record-id" title="Launch">
+                        <span class="icon is-small">
+                            <i class="fas fa-external-link-alt"></i>
+                        </span>
+                    </button>
                 </div>
                 <p class="help is-danger is-hidden">
                     You must enter a valid URL.

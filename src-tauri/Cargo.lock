@@ -3128,6 +3128,7 @@ dependencies = [
  "base64 0.22.1",
  "hex",
  "json",
+ "open",
  "rand 0.9.1",
  "serde",
  "serde_json",

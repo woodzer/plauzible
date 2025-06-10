@@ -13,7 +13,8 @@ const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) retu
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
-const GET_ALL_NON_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 0";
+const GET_ALL_NON_SENSITIVE_SETTINGS: &str =
+    "select id, key, value from settings where sensitive = 0";
 const GET_ALL_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 1";
 const UPDATE_RECORD_SQL: &str = "update data_records set data = ? where id = ?";
 const UPDATE_SETTING_SQL: &str = "update settings set value = ? where key = ?";
@@ -107,20 +108,40 @@ pub async fn delete_record_by_id(record_id: i64) -> Result<i64, String> {
 
 /// Fetches a list of all records in the settings database table with the
 /// sensitive flag set to true.
-pub async fn get_all_sensitive_settings(pool: &mut Pool<Sqlite>) -> Result<Vec<SettingRecord>, String> {
-    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_SENSITIVE_SETTINGS).fetch_all(& *pool).await {
+pub async fn get_all_sensitive_settings(
+    pool: &mut Pool<Sqlite>,
+) -> Result<Vec<SettingRecord>, String> {
+    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_SENSITIVE_SETTINGS)
+        .fetch_all(&*pool)
+        .await
+    {
         Ok(list) => list,
-        Err(error) => return Err(format!("Error retrieving non-sensitive settings. Cause: {:?}", error)),
+        Err(error) => {
+            return Err(format!(
+                "Error retrieving non-sensitive settings. Cause: {:?}",
+                error
+            ))
+        }
     };
     Ok(records)
 }
 
 /// Fetches a list of all records in the settings database table with the
 /// sensitive flag set to false.
-pub async fn get_all_standard_settings(pool: &mut Pool<Sqlite>) -> Result<Vec<SettingRecord>, String> {
-    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_NON_SENSITIVE_SETTINGS).fetch_all(& *pool).await {
+pub async fn get_all_standard_settings(
+    pool: &mut Pool<Sqlite>,
+) -> Result<Vec<SettingRecord>, String> {
+    let records: Vec<SettingRecord> = match sqlx::query_as(GET_ALL_NON_SENSITIVE_SETTINGS)
+        .fetch_all(&*pool)
+        .await
+    {
         Ok(list) => list,
-        Err(error) => return Err(format!("Error retrieving non-sensitive settings. Cause: {:?}", error)),
+        Err(error) => {
+            return Err(format!(
+                "Error retrieving non-sensitive settings. Cause: {:?}",
+                error
+            ))
+        }
     };
     Ok(records)
 }
@@ -328,7 +349,11 @@ pub async fn update_record_by_id(
 }
 
 /// Updates the value of a named setting in the application settings database table.
-pub async fn update_setting_by_name(pool: &mut Pool<Sqlite>, name: &str, value: &str) -> Result<(), String> {
+pub async fn update_setting_by_name(
+    pool: &mut Pool<Sqlite>,
+    name: &str,
+    value: &str,
+) -> Result<(), String> {
     match sqlx::query(UPDATE_SETTING_SQL)
         .bind(value)
         .bind(name)
@@ -336,7 +361,10 @@ pub async fn update_setting_by_name(pool: &mut Pool<Sqlite>, name: &str, value: 
         .await
     {
         Ok(_) => Ok(()),
-        Err(error) => Err(format!("Error updating the {} setting data. Cause: {:?}", name, error)),
+        Err(error) => Err(format!(
+            "Error updating the {} setting data. Cause: {:?}",
+            name, error
+        )),
     }
 }
 

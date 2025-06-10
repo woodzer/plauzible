@@ -1,7 +1,11 @@
 const { invoke } = window.__TAURI__.core;
 const { writeText } = window.__TAURI__.clipboardManager;
+const { open } = window.__TAURI__.dialog;
 
 import { camelCaseString, CHARACTER_SETS, showError, showSuccess } from "./utilities.js";
+import { importBitwardenJSONFile } from "./imports.js";
+import RecordImporter from "./record_importer.js";
+import ImportReport from "./import_report.js";
 
 const MINIMUM_PASSWORD_LENGTH = 10;
 const RECORD_PROPERTIES_TO_IGNORE = [];
@@ -274,6 +278,7 @@ function initializeApplication() {
     setupPasswordHandling();
     setupModals();
     setupRecordForm();
+    setupFileImporter();
     setupNavigationBar();
     showPasswordSection();
     touchTimeout();
@@ -309,6 +314,31 @@ function onDeleteRecordConfirmed(event) {
     }
 }
 
+function onImportCompletionEvent(event) {
+    let report = event.detail.report;
+    let section = document.querySelector("#file_importer_progress");
+
+    settings.records = report.result;
+    showSuccess("File record were imported successfully.");
+    if(section) {
+        section.querySelector(".close-file-import").disabled = false;
+    }
+}
+
+function onImportLogEvent(event) {
+    let log = document.querySelector("#import_log");
+    let template = document.querySelector("#import_log_template");
+
+    if(log && template) {
+        let line = template.content.cloneNode(true);
+
+        line.querySelector("p").innerText = event.detail.message;
+        line.firstElementChild.classList.add(`${event.detail.level}-log-line`);
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+    }
+}
+
 function onLaunchURL(event) {
     let target = event.target;
 
@@ -335,6 +365,70 @@ function onLaunchURL(event) {
         console.error("Copy password element does not possess a record id data attribute.");
     }
 }
+
+function onOpenImportFile(event) {
+    let section = document.querySelector("#file_importer");
+    let field = section.querySelector('input[name="importFilePath"]');
+    let settings = {
+        directory: false,
+        extensions: ["json"],
+        multiple: false,
+        name: "Import File"
+    };
+
+    event.preventDefault();
+    touchTimeout();
+    open(settings)
+        .then((file) => {
+            if(file) {
+                field.value = file;
+                field.dispatchEvent(new Event("change"));
+            }
+        })
+        .catch((error) => showError(`Failed to open the import file. Cause: ${error}`));
+}
+
+function onStartImport(event) {
+    let section = document.querySelector("#file_importer");
+    let pathField = section.querySelector('input[name="importFilePath"]');
+    let typeField = section.querySelector('select[name="fileType"]');
+    let duplicateField = section.querySelector('select[name="duplicateRecords"]');
+    let formSection = section.querySelector("#file_importer_form");
+    let progressSection = section.querySelector("#file_importer_progress");
+    let report = new ImportReport();
+
+    if(typeField.value === "bitwarden") {
+        importBitwardenJSONFile(pathField.value, report)
+            .then((records) => {
+                let importer = new RecordImporter(settings.records, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
+
+                importer.addProgressListener((event) => {
+                    let progress = section.querySelector("#file_importer_progress_bar");
+
+                    if(progress) {
+                        progress.value = event.detail.percentage;
+                    }
+                });
+
+                report.addEventListener("log", onImportLogEvent);
+                importer.addCompletionListener(onImportCompletionEvent);
+
+                formSection.classList.add("is-hidden");
+                progressSection.classList.remove("is-hidden");
+
+                importer.import()
+                    .then((report) => {
+                        settings.records = report.result;
+                        populateRecordListTable();
+                        showSuccess("File record were imported successfully.");
+                    });
+            })
+            .catch((error) => showError(`Failed to import the file. Cause: ${error}`));
+    } else {
+        showError("The import type requested is currently not supported.");
+    }
+}
+
 
 function openPasswordGeneratorModal(event) {
     let modal = document.querySelector("#password_generator_modal");
@@ -454,6 +548,28 @@ function resetForm(mode) {
     }
 }
 
+function setupFileImporter() {
+    let section = document.querySelector("#file_importer");
+    let importButton = section.querySelector(".submit-file-import");
+    let closeButton = section.querySelector(".close-file-import");
+    let field = section.querySelector('input[name="importFilePath"]');
+
+    if(section) {
+        field.addEventListener("change", () => {
+            touchTimeout();
+            importButton.disabled = (field.value.trim() === "");
+        });
+        section.querySelector(".open-file-button").addEventListener("click", onOpenImportFile);
+        importButton.addEventListener("click", onStartImport);
+        closeButton.addEventListener("click", () => {
+            showSection("loading_section")
+                .then(() => {
+                    showApplicationSection(settings.passwordHash);
+                });
+        });
+    }
+}
+
 function setupModals() {
     let modal;
 
@@ -492,6 +608,11 @@ function setupNavigationBar() {
             resetForm("create");
             showRecordFormSection();
         })
+    });
+
+    document.querySelector(".file-importer").addEventListener("click", (event) => {
+        event.preventDefault();
+        showFileImporterSection();
     });
 
     document.querySelectorAll(".end-session").forEach((element) => {
@@ -597,6 +718,20 @@ function showFieldHelp(element) {
     }
 }
 
+function showFileImporterSection() {
+    return(showSection("file_importer")
+        .then((section) => {
+            let fileField = section.querySelector('input[name="importFilePath"]');
+            let button = section.querySelector(".submit-file-import");
+
+            fileField.value = "";
+            button.disabled = true;
+            setTimeout(() => {
+                fileField.focus();
+            }, 250);
+        }));
+}
+
 function showRecordFormSection() {
     return(showSection("record_form")
         .then((section) => {
@@ -651,6 +786,7 @@ function submitPassword(event) {
         let passwordValue = passwordField.value;
 
         if(passwordValue.trim().length >= MINIMUM_PASSWORD_LENGTH) {
+            showSection("loading_section");
             passwordField.value = "";
             invoke("hash_password", {password: passwordValue})
                 .then((hash) => {

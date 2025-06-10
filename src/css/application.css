@@ -19,12 +19,20 @@
     justify-content: flex-end;
 }
 
+.alert-log-line {
+    background-color: rgba( 255, 195, 0, 0.3);
+}
+
+.error-log-line {
+    background-color: rgba( 255, 0, 0, 0.3);
+}
+
 body {
-    bottom: 0;
-    left: 0;
+    bottom: 50px;
+    left: 5px;
     position: absolute;
-    right: 0;
-    top: 0;
+    right: 5px;
+    top: 5px;
 }
 
 .close-button {
@@ -45,11 +53,20 @@ body {
     height: 100%;
 }
 
-.hidden {
+/* Stop page scroll bar showing. */
+html {
+    overflow-y: hidden;
 }
 
 .is-200px-wide {
     width: 200px;
+}
+
+.log-output {
+    border: solid 1px #777;
+    height: 20em;
+    overflow: auto;
+    padding: 5px;
 }
 
 #password_card {

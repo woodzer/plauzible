@@ -20,7 +20,7 @@ pub async fn decrypt_record(password_hash: String, record: String) -> Result<Str
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
     match utilities::decrypt(&password_hash, &nonce_hex, &record).await {
         Some(clear_text) => Ok(clear_text),
-        _ => Err("Failed to decrypt record string.".to_string())
+        _ => Err("Failed to decrypt record string.".to_string()),
     }
 }
 
@@ -28,7 +28,7 @@ pub async fn decrypt_record(password_hash: String, record: String) -> Result<Str
 pub fn get_database_path() -> String {
     match database::get_existing_database_path() {
         Some(path) => path,
-        _ => String::from("")
+        _ => String::from(""),
     }
 }
 
@@ -39,14 +39,19 @@ pub async fn get_sensitive_settings() -> Result<String, String> {
     let mut array = JsonValue::new_array();
 
     for record in records {
-        let object = object!{
+        let object = object! {
             id: record.id,
             key: record.key,
             value: record.value
         };
         match array.push(object) {
-            Err(error) => return Err(format!("Failed to store JSON object into array. Cause: {:?}", error)),
-            _ => ()
+            Err(error) => {
+                return Err(format!(
+                    "Failed to store JSON object into array. Cause: {:?}",
+                    error
+                ))
+            }
+            _ => (),
         };
     }
 
@@ -60,14 +65,19 @@ pub async fn get_standard_settings() -> Result<String, String> {
     let mut array = JsonValue::new_array();
 
     for record in records {
-        let object = object!{
+        let object = object! {
             id: record.id,
             key: record.key,
             value: record.value
         };
         match array.push(object) {
-            Err(error) => return Err(format!("Failed to store JSON object into array. Cause: {:?}", error)),
-            _ => ()
+            Err(error) => {
+                return Err(format!(
+                    "Failed to store JSON object into array. Cause: {:?}",
+                    error
+                ))
+            }
+            _ => (),
         };
     }
 
@@ -85,7 +95,7 @@ pub async fn get_records_for_password(password_hash: String) -> Result<String, S
 pub fn has_been_initialized() -> bool {
     match database::get_existing_database_path() {
         Some(_) => true,
-        _ => false
+        _ => false,
     }
 }
 
@@ -95,7 +105,7 @@ pub async fn hash_password(password: String) -> Result<String, String> {
     let salt_setting = database::get_salt_string(&mut pool).await?;
     match utilities::generate_password_hash(&salt_setting, &password) {
         Ok(bytes) => Ok(hex::encode(bytes)),
-        Err(message) => Err(message)
+        Err(message) => Err(message),
     }
 }
 
@@ -119,7 +129,7 @@ pub fn initialize_application(salt: String, service_key: String) -> Result<Strin
             };
             Ok(response.dump())
         }
-        Err(message) => Err(message)
+        Err(message) => Err(message),
     }
 }
 
@@ -189,7 +199,7 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
                 error
             ))
         }
-        _ => ()
+        _ => (),
     };
 
     let url = match json["url"].is_string() {
@@ -243,15 +253,23 @@ pub async fn update_record(
 }
 
 #[tauri::command]
-pub async fn update_password_generator_settings(password_length: i64, default_character_set: String) -> Result<(), String> {
+pub async fn update_password_generator_settings(
+    password_length: i64,
+    default_character_set: String,
+) -> Result<(), String> {
     let mut pool = database::connect_to_database().await?;
-    database::update_setting_by_name(&mut pool, "password.length", &password_length.to_string()).await?;
-    database::update_setting_by_name(&mut pool, "password.character_set", &default_character_set).await?;
+    database::update_setting_by_name(&mut pool, "password.length", &password_length.to_string())
+        .await?;
+    database::update_setting_by_name(&mut pool, "password.character_set", &default_character_set)
+        .await?;
     Ok(())
 }
 
 #[tauri::command]
-pub async fn update_remote_service_settings(service_key: String, service_url: String) -> Result<(), String> {
+pub async fn update_remote_service_settings(
+    service_key: String,
+    service_url: String,
+) -> Result<(), String> {
     let mut pool = database::connect_to_database().await?;
     database::update_setting_by_name(&mut pool, "service.key", &service_key).await?;
     database::update_setting_by_name(&mut pool, "service.url", &service_url).await?;

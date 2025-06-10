@@ -65,6 +65,13 @@
             </div>
         </section>
 
+        <section class="pt-6 is-hidden ui-section" id="loading_section">
+            <center class="mt-6">
+                <h2 class="is-4 title">Working...</h2>
+                <p class="content is-size-6">Please wait, this may take a few moments.</p>
+            </center>
+        </section>
+
         <section class="is-hidden ui-section" id="application_section">
             <nav class="application-navbar mt-2">
                 <section class="application-navbar-section application-navbar-section-left">
@@ -72,10 +79,16 @@
                 </section>
 
                 <section class="application-navbar-section application-navbar-section-right">
-                    <button class="button create-record" title="Add Password Entry">
+                    <button class="button create-record mr-4" title="Add Password Entry">
                         <span class="icon is small">
                             <i class="fas fa-plus"></i>
                         </span>    
+                    </button>
+
+                    <button class="button file-importer" title="Import File">
+                        <span class="icon is small">
+                            <i class="fas fa-file-upload"></i>
+                        </span>
                     </button>
 
                     <a class="button" href="/settings.html" title="Settings">
@@ -103,6 +116,7 @@
                     </div>
                 </div>
             </section>
+            <br>
         </section>
 
         <section class="is-hidden pl-6 pr-6 ui-section" id="record_form">
@@ -191,6 +205,69 @@
                 <button class="button is-hidden is-success submit-record-update">Update</button>
                 <button class="button cancel-record-form">Cancel</button>
             </div>
+        </section>
+
+        <section class="is-hidden pl-6 pr-6 ui-section" id="file_importer">
+            <h2 class="is-4 mt-5 title">Import File</h2>
+            <hr>
+
+            <section id="file_importer_form">
+                <div class="field">
+                    <label class="label">File Type</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select class="select is-expanded" name="fileType">
+                                <option value="bitwarden">Bitwarden JSON</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="label">File</label>
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" name="importFilePath" readonly type="text" accept=".json"/>
+                    </div>
+                    <div class="control">
+                        <button class="button open-file-button">
+                            <span class="icon is-small">
+                                <i class="fas fa-folder-open"></i>
+                            </span>
+                        </button>
+                    </div>
+                    <p class="help is-danger is-hidden">
+                        You must select a file to import.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label class="label">Duplicate Records</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select class="select is-expanded" name="duplicateRecords">
+                                <option value="ignore">Ignore (i.e. do not import)</option>
+                                <option value="rename">Rename (i.e. add a number to the end of the name)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons is-pulled-right mt-3">
+                    <button class="button is-success submit-file-import">Import</button>
+                </div>
+            </section>
+
+            <section class="is-hidden" id="file_importer_progress">
+                <label class="label">Import Progress</label>
+                <progress class="progress is-primary" id="file_importer_progress_bar" value="0" max="100"></progress>
+
+                <label class="label mt-3">Import Log</label>
+                <section class="log-output" id="import_log"></section>
+
+                <div class="buttons is-pulled-right mt-3">
+                    <button class="button close-file-import" disabled>Close</button>
+                </div>
+            </section>
         </section>
     </div>
 
@@ -299,6 +376,12 @@
                         </span>
                     </div>
                 </div>
+            </div>
+        </template>
+
+        <template id="import_log_template">
+            <div class="log-line">
+                <p></p>
             </div>
         </template>
     </div>

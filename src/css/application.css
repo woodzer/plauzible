@@ -69,6 +69,10 @@ html {
     padding: 5px;
 }
 
+.overflow-auto {
+    overflow: auto;
+}
+
 #password_card {
     margin-top: 175px;
 }

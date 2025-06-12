@@ -11,7 +11,9 @@ const MINIMUM_PASSWORD_LENGTH = 10;
 const RECORD_PROPERTIES_TO_IGNORE = [];
 
 let settings = {
+    activeSection: null,
     passwordHash: null,
+    previousSection: null,
     records: [],
     timeoutFunction: null
 };
@@ -275,6 +277,7 @@ function hideVisibleSection() {
 }
 
 function initializeApplication() {
+    setupPageHandlers();
     setupPasswordHandling();
     setupModals();
     setupRecordForm();
@@ -562,10 +565,7 @@ function setupFileImporter() {
         section.querySelector(".open-file-button").addEventListener("click", onOpenImportFile);
         importButton.addEventListener("click", onStartImport);
         closeButton.addEventListener("click", () => {
-            showSection("loading_section")
-                .then(() => {
-                    showApplicationSection(settings.passwordHash);
-                });
+            showApplicationSection(settings.passwordHash);
         });
     }
 }
@@ -617,6 +617,44 @@ function setupNavigationBar() {
 
     document.querySelectorAll(".end-session").forEach((element) => {
         element.addEventListener("click", endSession);
+    });
+
+    document.querySelector(".settings-button").addEventListener("click", (event) => {
+        event.preventDefault();
+        showSettings();
+    });
+}
+
+function setupPageHandlers() {
+    window.addEventListener("message", (event) => {
+        let message = event.data;
+        let emptyIFrame = () => {
+            document.querySelector("#subpage_iframe").src = "/empty.html";
+        };
+
+        if(message.source === "settings") {
+            if(message.action === "closed") {
+                switch(settings.previousSection) {
+                    case "application_section":
+                        showApplicationSection(settings.passwordHash);
+                        setTimeout(emptyIFrame, 500);
+                        break;
+                    case "file_importer":
+                        showFileImporterSection();
+                        setTimeout(emptyIFrame, 500);
+                        break;
+                    case "record_form":
+                        showRecordFormSection();
+                        setTimeout(emptyIFrame, 500);
+                        break;
+                    default:
+                        console.error(`Unknown previous section: ${settings.previousSection}`);
+                        break;
+                }
+            } else {
+                console.error(`Unknown message action received from settings: ${message.source}.${message.action}`);
+            }
+        }
     });
 }
 
@@ -698,13 +736,16 @@ function setupRowEventHandlers(row, record) {
 }
 
 function showApplicationSection(passwordHash) {
-    invoke("get_records_for_password", {passwordHash: passwordHash})
-    .then((data) => {
-        let object = JSON.parse(data);
-        settings.records = object.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
-        populateRecordListTable();
-        showSection("application_section");
-    });
+    showSection("loading_section")
+        .then(() => {
+            return(invoke("get_records_for_password", {passwordHash: passwordHash}));
+        })
+        .then((data) => {
+            let object = JSON.parse(data);
+            settings.records = object.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
+            populateRecordListTable();
+            showSection("application_section");
+        });
 }
 
 function showFieldHelp(element) {
@@ -766,14 +807,24 @@ function showPasswordSection() {
 function showSection(sectionName) {
     return(hideVisibleSection()
         .then(() => {
+            settings.previousSection = settings.activeSection;
+            settings.activeSection = null;
             return(getSection(sectionName));
         })
         .then((section) => {
+            settings.activeSection = sectionName;
             section.classList.remove("is-hidden");
             return(section);
         })
         .catch((error) => {
             console.error(`Failed to show the '${sectionName}' UI section. Cause: ${error}`)
+        }));
+}
+
+function showSettings() {
+    return(showSection("iframe_section")
+        .then((section) => {
+            section.querySelector("#subpage_iframe").src = "/settings.html";
         }));
 }
 

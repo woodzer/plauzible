@@ -92,6 +92,13 @@ function setUpEventHandlers() {
     if(button) {
         button.addEventListener("click", updatePasswordGeneratorSettings);
     }
+
+    document.querySelectorAll(".close-button").forEach((element) => {
+        element.addEventListener("click", (event) => {
+            event.preventDefault();
+            window.parent.postMessage({ source: "settings", action: "closed" }, "*");
+        });
+    });
 }
 
 function showLoading() {

@@ -16,8 +16,8 @@
     <script type="module" src="/js/settings.js" defer></script>
 </head>
 
-<body>
-    <div class="container height-100pct pl-6 pr-6">
+<body class="overflow-auto">
+    <div class="container height-100pct pr-5">
         <section class="pt-6" id="loading_section">
             <span class="close-button has-text-weight-bold is-size-2">
                 <a class="close" href="/application.html" title="Close">&times;</a>
@@ -29,9 +29,9 @@
             </center>
         </section>
 
-        <section class="is-hidden mb-6 pb-6" id="settings_section">
+        <section class="is-hidden mb-6 pb-6 overflow-auto" id="settings_section">
             <span class="top-right-button">
-                <a href="/application.html" title="Close">
+                <a class="close-button" href="#" title="Close">
                     <span class="icon">
                         <i class="fa-lg fas fa-times"></i>
                     </span>
@@ -113,6 +113,19 @@
                 </p>
 
                 <div class="is-hidden" id="encryption_settings_details">
+                    <article class="message is-danger">
+                        <div class="message-body">
+                            <p class="content has-text-justified">
+                                <strong>Warning:</strong> Your encryption settings impact
+                                how your records are encrypted. If you change these
+                                settings then you will lose access to the records you
+                                previously created on this machine! If you have not yet
+                                created any records then you can safely change these
+                                settings.
+                            </p>
+                        </div>
+                    </article>
+
                     <div class="field">
                         <div class="control">
                             <input class="input" name="encryptionSettings" type="text">

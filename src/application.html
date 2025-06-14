@@ -105,6 +105,57 @@
                 </section>
             </nav>
 
+            <div class="list-filter pt-2">
+                <div class="columns">
+                    <div class="column is-two-fifths" id="name_filter_field">
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                <input class="input is-small" name="nameFilter" placeholder="Filter by record name" type="text"/>
+                            </div>
+                            <div class="control">
+                                <button class="button clear-name-filter is-small" title="Clear Filter">
+                                    <span class="icon is-small">
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column is-two-fifths">
+                        <div class="dropdown-select" id="tag_filter_field">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input class="input is-small" name="tagFilter" placeholder="Filter by record tags" readonly type="text"/>
+                                </div>
+                                <div class="control">
+                                    <button class="button is-small toggle-list" title="Show Available Tags">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-angle-down"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <button class="button clear-tags-filter is-small" title="Clear Filter">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </button>    
+                                </div>
+                            </div>
+
+                            <div class="dropdown-select-list filter-dropdown is-hidden" id="tag_filter_dropdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="column is-one-fifth">
+                        <div class="buttons is-pulled-right">
+                            <button class="button clear-filters mr-3 is-small" title="Clear All Filters">Clear All Filters</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <section class="record-list" id="record_list">
                 <div class="is-hidden">
                     <p class="has-text-centered has-text-grey-light is-size-5 mt-6">No records found. Click <a class="create-record has-text-info has-text-weight-bold">here</a> to get start.</p>
@@ -191,6 +242,13 @@
                 <p class="help is-danger is-hidden">
                     You must enter a valid URL.
                 </p>
+            </div>
+
+            <div class="field">
+                <label class="label">Tags</label>
+                <div class="control">
+                    <input class="input is-clickable" name="tags" placeholder="Enter tags for the record" readonly type="text"/>
+                </div>
             </div>
 
             <div class="field">
@@ -357,10 +415,50 @@
                     </div>
                 </footer>
             </div>
-           </div>
+        </div>
+
+        <!-- Tag Selector Modal -->
+        <div class="modal" id="tag_selector_modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Tag Selector</p>
+                    <button class="delete cancel-modal"></button>
+                </header>
+
+                <section class="modal-card-body">
+                    <label class="label">Available Tags</label>
+                    <div class="mb-4 tag-selector-list" id="tag_selector_list"></div>
+
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input" name="newTag" placeholder="Enter a new tag" type="text"/>
+                        </div>
+                        <div class="control">
+                            <button class="button add-tag">Add</button>
+                        </div>
+                    </div>
+
+                    <input class="input" name="selectedTags" type="hidden"/>
+                </section>
+
+                <footer class="modal-card-foot">
+                    <div class="buttons is-pulled-right">
+                        <button class="button is-success submit-button">Use Selected</button>
+                        <button class="button cancel-modal">Cancel</button>
+                    </div>
+                </footer>
+            </div>
+        </div>
     </div>
 
     <div class="is-hidden" id="templates_container">
+        <template id="import_log_template">
+            <div class="log-line">
+                <p></p>
+            </div>
+        </template>
+
         <template id="list_table_row_template">
             <div class="pb-3 pl-3 pt-3 table-row">
                 <div class="name-column table-column"></div>
@@ -383,9 +481,12 @@
             </div>
         </template>
 
-        <template id="import_log_template">
-            <div class="log-line">
-                <p></p>
+        <template id="tag_filter_list_entry">
+            <div class="tag-filter-list-entry">
+                <label class="checkbox">
+                    <input class="tag-checkbox" type="checkbox">
+                    <span class="tag-label"></span>
+                </label>
             </div>
         </template>
     </div>

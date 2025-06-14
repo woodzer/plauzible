@@ -49,6 +49,19 @@ body {
     color: #555;
 }
 
+.filter-dropdown {
+    background-color: #fff;
+    border: solid 1px #D6D9E0;
+    max-height: 200px;
+    min-height: 25px;
+    overflow: auto;
+    padding-bottom: 5px;
+    position: relative;
+    top: -12px;
+    width: 100%;
+    z-index: 1000;
+}
+
 .height-100pct {
     height: 100%;
 }
@@ -85,7 +98,7 @@ html {
     padding-top: 3px;
     position: absolute;
     right: 0;
-    top: 80px;
+    top: 122px;
 }
 
 .record-list-table {
@@ -112,6 +125,17 @@ html {
 
 .table-row:hover {
     background-color: rgba(250, 250, 250, 0.75);
+}
+
+.tag-filter-list-entry {
+    margin: 5px 0;
+    padding: 3px 0 3px 10px
+}
+
+.tag-selector-list {
+    border: solid 1px #D6D9E0;
+    max-height: 200px;
+    overflow: auto;
 }
 
 .top-right-button {

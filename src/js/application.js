@@ -2,7 +2,7 @@ const { invoke } = window.__TAURI__.core;
 const { writeText } = window.__TAURI__.clipboardManager;
 const { open } = window.__TAURI__.dialog;
 
-import { camelCaseString, CHARACTER_SETS, showError, showSuccess } from "./utilities.js";
+import { camelCaseString, CHARACTER_SETS, showError, showSuccess, uniqueAndSortStringList, watchSpecificClass } from "./utilities.js";
 import { importBitwardenJSONFile } from "./imports.js";
 import RecordImporter from "./record_importer.js";
 import ImportReport from "./import_report.js";
@@ -15,11 +15,53 @@ let settings = {
     passwordHash: null,
     previousSection: null,
     records: [],
+    tags: [],
     timeoutFunction: null
 };
 
+
+function applyRecordFilter(event) {
+    let nameField = document.querySelector('input[name="nameFilter"]');
+    let tagsField = document.querySelector('input[name="tagFilter"]');
+
+    if(event) {
+        event.preventDefault();
+    }
+    touchTimeout();
+    setTimeout(() => {
+        if(nameField.value.trim() !== "" || tagsField.value.trim() !== "" || settings.filterByNoTags) {
+            settings.filter = (record) => {
+                let tags = tagsField.value.split(", ").map((tag) => tag.trim().toLowerCase()).filter((tag) => tag !== "");
+                let nameSearch = nameField.value.toLowerCase();
+
+                let matchedOnName = nameSearch === "" || record.name.toLowerCase().includes(nameSearch);
+                let matchedOnTags = tags.length === 0 || record.tags.some((tag) => tags.includes(tag.toLowerCase()));
+                let matchedOnNoTags = settings.filterByNoTags && record.tags.length === 0;
+
+                return(matchedOnName && (matchedOnTags || matchedOnNoTags));
+            };
+        } else {
+            settings.filter = () => true;
+        }
+        populateRecordListTable();
+    }, 250);
+}
+
 function clearAllFormErrors(section) {
     section.querySelectorAll(".field .help").forEach((element) => element.classList.add("is-hidden"));
+}
+
+function clearAllFilters() {
+    let fields = [document.querySelector('input[name="nameFilter"]'),
+                  document.querySelector('input[name="tagFilter"]')];
+    let dropdown = document.querySelector("#tag_filter_dropdown");
+
+    fields.forEach((field) => {
+        field.value = "";
+    });
+    settings.filterByNoTags = false;
+    dropdown.classList.add("is-hidden");
+    clearSelectedTags();
 }
 
 function clearRecordListTable() {
@@ -32,6 +74,16 @@ function clearRecordListTable() {
     }
 }
 
+function clearSelectedTags() {
+    let element = document.querySelector("#tag_filter_field");
+
+    if(element) {
+        element.querySelectorAll('input[type="checkbox"]').forEach((element) => {
+            element.checked = false;
+        });
+        settings.filterByNoTags = false;
+    }
+}
 
 function createRecord(event) {
     event.preventDefault();
@@ -178,7 +230,9 @@ function endSession(event) {
 
     settings.passwordHash = null;
     settings.records = [];
+    clearAllFilters();
     clearRecordListTable();
+    document.querySelectorAll(".modal").forEach((modal) => modal.classList.remove("is-active"));
     showPasswordSection();
     settings.timeoutFunction = null;
 }
@@ -193,8 +247,6 @@ function generatePassword(event) {
         let characterSetKey = modal.querySelector('select[name="characterSet"]').value;
         let characterSet = CHARACTER_SETS[characterSetKey];
 
-        console.log(`Password length: ${passwordLength}`);
-        console.log(`Character set: ${characterSet}`);
         invoke("select_random_characters", {text: characterSet, length: passwordLength})
             .then((output) => {
                 modal.querySelector('input[name="generatedPassword"]').value = output;
@@ -217,7 +269,11 @@ function getRecordContent() {
             let propertyName = camelCaseString(field.name);
 
             if(!RECORD_PROPERTIES_TO_IGNORE.includes(propertyName)) {
-                record[propertyName] = field.value.trim();
+                if(propertyName === "tags") {
+                    record[propertyName] = field.value.split(", ").map((tag) => tag.trim());
+                } else {
+                    record[propertyName] = field.value.trim();
+                }
             }
         });
         section.querySelectorAll("textarea").forEach((field) => {
@@ -284,6 +340,8 @@ function initializeApplication() {
     setupFileImporter();
     setupNavigationBar();
     showPasswordSection();
+    setupDropdownSelects();
+    setupRecordFilters();
     touchTimeout();
 }
 
@@ -471,7 +529,11 @@ function populateRecordForm(record) {
             let fieldName = camelCaseString(field.name);
 
             if(record[fieldName]) {
-                field.value = record[fieldName];
+                if(fieldName === "tags") {
+                    field.value = record[fieldName].join(", ");
+                } else {
+                    field.value = record[fieldName];
+                }
             } else {
                 field.value = "";
             }
@@ -502,22 +564,92 @@ function populateRecordListTable() {
 
         if(rowTemplate) {
             let tableBody = recordListTable.querySelector("tbody");
+            let filter = () => true;
+            let fragment = document.createDocumentFragment();
 
-            clearRecordListTable();
-            settings.records.forEach((record) => {
+            if(settings.filter) {
+                filter = settings.filter;
+            }
+
+            settings.records.filter(filter).forEach((record) => {
                 let row     = rowTemplate.content.cloneNode(true);
                 let columns = row.querySelectorAll(".table-column");
 
                 columns[0].innerText = record.name;
                 row.querySelector("div.table-row").dataset.id = `${record.id}`;
                 setupRowEventHandlers(row, record);
-                recordListTable.appendChild(row);
+                fragment.appendChild(row);
             });
+
+            clearRecordListTable();
+            recordListTable.appendChild(fragment);
         } else {
             console.error("Failed to find the record list table row template element on the page.");
         }
     } else {
         console.error("Failed to find the record list table element on the page.");
+    }
+}
+
+function populateAvailableTagsList() {
+    let listControl = document.querySelector("#tag_selector_list");
+
+    if(listControl) {
+        let labels = uniqueAndSortStringList([].concat(settings.tags));
+        let template = document.querySelector("#tag_filter_list_entry");
+        let fragment = document.createDocumentFragment();
+
+        listControl.innerHTML = "";
+        labels.forEach((label) => {
+            let entry = template.content.cloneNode(true);
+            let checkbox = entry.querySelector(".tag-checkbox");
+
+            entry.querySelector(".tag-label").innerText = label;
+            checkbox.setAttribute("value", label);
+            fragment.appendChild(entry);
+        });
+        listControl.appendChild(fragment);
+    }
+}
+
+function populateTagFilterList() {
+    let list = document.querySelector("#tag_filter_field");
+
+    if(list) {
+        let labels = uniqueAndSortStringList([].concat(settings.tags));
+        let template = document.querySelector("#tag_filter_list_entry");
+        let listControl = list.querySelector(".dropdown-select-list");
+
+        listControl.innerHTML = "";
+        let noneEntry = template.content.cloneNode(true);
+        noneEntry.id = "none_tag_entry";
+        noneEntry.querySelector(".tag-label").innerText = "Has No Tags";
+        noneEntry.querySelector(".tag-checkbox").setAttribute("value", "");
+        noneEntry.querySelector(".tag-checkbox").addEventListener("change", (event) => {
+            event.preventDefault();
+            settings.filterByNoTags = event.target.checked;
+            applyRecordFilter(event);
+        });
+        listControl.appendChild(noneEntry);
+
+        labels.forEach((label) => {
+            let entry = template.content.cloneNode(true);
+            let checkbox = entry.querySelector(".tag-checkbox");
+            let field = list.querySelector('input[name="tagFilter"]');
+
+            entry.querySelector(".tag-label").innerText = label;
+            checkbox.setAttribute("value", label);
+            checkbox.addEventListener("change", (event) => {
+                let tags = [];
+
+                listControl.querySelectorAll(".tag-checkbox:checked").forEach((checkbox) => {
+                    tags.push(checkbox.value);
+                });
+                field.value = tags.join(", ");
+                applyRecordFilter(event);
+            });
+            listControl.appendChild(entry);
+        });
     }
 }
 
@@ -549,6 +681,17 @@ function resetForm(mode) {
     } else {
         console.error("Unable to get record content as form section not found on the page.");
     }
+}
+
+function setupDropdownSelects() {
+    let controls = document.querySelectorAll(".dropdown-select");
+
+    controls.forEach((control) => {
+        control.querySelector(".toggle-list").addEventListener("click", (event) => {
+            let list = control.querySelector(".dropdown-select-list");
+            list.classList.toggle("is-hidden");
+        });
+    });
 }
 
 function setupFileImporter() {
@@ -598,6 +741,42 @@ function setupModals() {
         });
 
         modal.querySelector("button.submit-button").addEventListener("click", useGeneratedPassword);
+    }
+
+    modal = document.querySelector("#tag_selector_modal");
+    if(modal) {
+        let addButton = modal.querySelector("button.add-tag");
+        let submitButton = modal.querySelector("button.submit-button");
+
+        addButton.addEventListener("click", (event) => {
+            let newTagField = modal.querySelector('input[name="newTag"]');
+
+            if(newTagField.value.trim().length > 0) {
+                let tagList = modal.querySelector(".tag-selector-list");
+
+                if(tagList) {
+                    let template = document.querySelector("#tag_filter_list_entry");
+                    let entry = template.content.cloneNode(true);
+                    let checkbox = entry.querySelector(".tag-checkbox");
+
+                    entry.querySelector(".tag-label").innerText = newTagField.value.trim();
+                    checkbox.setAttribute("value", newTagField.value.trim());
+                    checkbox.checked = true;
+                    tagList.insertBefore(entry, tagList.firstChild);
+                    newTagField.value = "";
+                    newTagField.focus();
+                }
+            }
+        });
+
+        submitButton.addEventListener("click", (event) => {
+            let tagList = modal.querySelector(".tag-selector-list");
+            let selectedTags = Array.from(tagList.querySelectorAll(".tag-checkbox:checked")).map((checkbox) => checkbox.value);
+            let hiddenField = modal.querySelector('input[name="selectedTags"]');
+
+            hiddenField.value = selectedTags.join(", ");
+            modal.classList.remove("is-active");
+        });
     }
 }
 
@@ -674,10 +853,45 @@ function setupPasswordHandling() {
     }
 }
 
+function setupRecordFilters() {
+    let elements = [document.querySelector("#name_filter_field"),
+                    document.querySelector("#tag_filter_field")];
+
+    if(elements.length > 0) {
+        let fields = [elements[0].querySelector('input[name="nameFilter"]'),
+                      elements[1].querySelector('input[name="tagFilter"]')];
+        let clearButtons = [elements[0].querySelector(".clear-name-filter"),
+                            elements[1].querySelector(".clear-tags-filter")];
+
+        fields[0].addEventListener("input", applyRecordFilter);
+        fields[1].addEventListener("change", applyRecordFilter);
+        clearButtons[0].addEventListener("click", (e) => {
+            fields[0].value = "";
+            applyRecordFilter(e);
+        });
+        clearButtons[1].addEventListener("click", (e) => {
+            clearSelectedTags();
+            fields[1].value = "";
+            applyRecordFilter(e);
+        });
+        document.querySelector(".button.clear-filters").addEventListener("click", (e) => {
+            clearAllFilters();
+            applyRecordFilter(e);
+        });
+    }
+}
+
 function setupRecordForm() {
     let section = document.querySelector("#record_form");
 
     if(section) {
+        section.querySelector('input[name="tags"]').addEventListener("click", (event) => {
+            let selectedTags = section.querySelector('input[name="tags"]').value.split(", ");
+
+            event.preventDefault();
+            touchTimeout();
+            showTagSelectorModal(selectedTags, (tags) => section.querySelector('input[name="tags"]').value = tags);
+        });
         section.querySelector(".submit-record-create").addEventListener("click", createRecord);
         section.querySelector(".submit-record-update").addEventListener("click", updateRecord);
         section.querySelectorAll(".cancel-record-form").forEach((element) => {
@@ -742,8 +956,11 @@ function showApplicationSection(passwordHash) {
         })
         .then((data) => {
             let object = JSON.parse(data);
+
             settings.records = object.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
+            updateRecordTags();
             populateRecordListTable();
+            populateTagFilterList();
             showSection("application_section");
         });
 }
@@ -807,6 +1024,8 @@ function showPasswordSection() {
 function showSection(sectionName) {
     return(hideVisibleSection()
         .then(() => {
+            clearAllFilters();
+            applyRecordFilter(null);
             settings.previousSection = settings.activeSection;
             settings.activeSection = null;
             return(getSection(sectionName));
@@ -826,6 +1045,34 @@ function showSettings() {
         .then((section) => {
             section.querySelector("#subpage_iframe").src = "/settings.html";
         }));
+}
+
+function showTagSelectorModal(selectedTags=[], callback=null) {
+    let modal = document.querySelector("#tag_selector_modal");
+
+    if(modal) {
+        let newTagField = modal.querySelector('input[name="newTag"]');
+
+        populateAvailableTagsList();
+        modal.querySelectorAll(".tag-checkbox").forEach((checkbox) => {
+            checkbox.checked = selectedTags.includes(checkbox.value);
+        });
+
+        
+        modal.classList.add("is-active");
+        let observer = watchSpecificClass(modal, "is-hidden", (isHidden) => {
+            if(!isHidden) {
+                observer.disconnect();
+                updateRecordTags();
+                if(callback) {
+                    callback(modal.querySelector('input[name="selectedTags"]').value);
+                }
+            }
+        });
+        newTagField.focus();
+    } else {
+        console.error("Unable to locate the tag selector modal on the page.");
+    }
 }
 
 function submitPassword(event) {
@@ -920,6 +1167,10 @@ function updateRecord(event) {
             showError("Call to update record failed because the password hash has not been set.");
         }
     }
+}
+
+function updateRecordTags() {
+    settings.tags = uniqueAndSortStringList(settings.records.map((r) => [].concat(r.tags)).flat().sort((rhs, lhs) => rhs.localeCompare(lhs)));
 }
 
 function validateRecordForm(ignoreId) {

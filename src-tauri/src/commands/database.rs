@@ -243,9 +243,11 @@ pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
                                 .expect("URL string extraction failed."),
                             _ => "",
                         };
+
                         match objects.push(object! {
                             data: record.data,
                             id: record.id,
+                            tags: content["tags"].clone(),
                             hasURL: url.trim() != "",
                             name: content["name"].clone()
                         }) {

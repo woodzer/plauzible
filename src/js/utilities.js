@@ -46,6 +46,61 @@ function showSuccess(message) {
     });
 }
 
+function watchClassList(element, callback) {
+    if (!element) {
+        console.error("Cannot watch class list of null element");
+        return null;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                callback(element.classList);
+            }
+        });
+    });
+
+    observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+
+    return observer;
+}
+
+function watchSpecificClass(element, className, callback) {
+    if (!element) {
+        console.error("Cannot watch class of null element");
+        return null;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const hasClass = element.classList.contains(className);
+                callback(hasClass);
+            }
+        });
+    });
+
+    observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+
+    return observer;
+}
+
+function uniqueAndSortStringList(array) {
+    let object = {};
+
+    array.forEach((item) => {
+        object[item] = true;
+    });
+
+    return Object.keys(object).sort((a, b) => a.localeCompare(b, 'en', {'sensitivity': 'base'}));
+}
+
 export {
     ALPHANUMERIC_LOWER,
     ALPHANUMERIC_UPPER,
@@ -56,5 +111,8 @@ export {
     DEFAULT_PASSWORD_LENGTH,
     camelCaseString,
     showError,
-    showSuccess
+    showSuccess,
+    watchClassList,
+    watchSpecificClass,
+    uniqueAndSortStringList
 };

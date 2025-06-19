@@ -91,6 +91,7 @@ html {
 }
 
 .record-list {
+    border-bottom: solid 1px #777;
     border-top: solid 1px #777;
     bottom: 0;
     left: 0;

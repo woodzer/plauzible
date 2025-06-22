@@ -14,8 +14,11 @@ pub fn run() {
             commands::decrypt_record,
             commands::delete_database,
             commands::delete_record,
+            commands::delete_remote_record,
+            commands::get_application_settings,
             commands::get_database_path,
-            commands::get_records_for_password,
+            commands::get_local_records_for_password,
+            commands::get_remote_records_for_password,
             commands::get_sensitive_settings,
             commands::get_standard_settings,
             commands::has_been_initialized,
@@ -24,8 +27,10 @@ pub fn run() {
             commands::open_url,
             commands::select_random_characters,
             commands::store_record,
+            commands::store_remote_record,
             commands::update_password_generator_settings,
             commands::update_record,
+            commands::update_remote_record,
             commands::update_remote_service_settings,
             commands::update_sensitive_settings
         ])

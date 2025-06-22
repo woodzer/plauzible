@@ -1,17 +1,14 @@
 mod database;
+mod rest_api;
 mod utilities;
 
 use json::JsonValue;
 use rand::prelude::*;
+use uuid::Uuid;
 
 #[tauri::command]
 pub fn delete_database() -> Result<(), String> {
     database::remove_existing_database()
-}
-
-#[tauri::command]
-pub async fn delete_record(record_id: i64) -> Result<i64, String> {
-    database::delete_record_by_id(record_id).await
 }
 
 #[tauri::command]
@@ -25,11 +22,29 @@ pub async fn decrypt_record(password_hash: String, record: String) -> Result<Str
 }
 
 #[tauri::command]
+pub async fn delete_record(record_id: i64) -> Result<i64, String> {
+    database::delete_record_by_id(record_id).await
+}
+
+#[tauri::command]
+pub async fn delete_remote_record(password_hash: String, record: String, record_id: i64) -> Result<i64, String> {
+    rest_api::delete_remote_record(&password_hash, &record, record_id).await
+}
+
+#[tauri::command]
 pub fn get_database_path() -> String {
     match database::get_existing_database_path() {
         Some(path) => path,
         _ => String::from(""),
     }
+}
+
+#[tauri::command]
+pub async fn get_application_settings() -> Result<String, String> {
+    let settings = object! {
+        operationMode: utilities::get_operation_mode().await?
+    };
+    Ok(settings.dump())
 }
 
 #[tauri::command]
@@ -85,8 +100,13 @@ pub async fn get_standard_settings() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn get_records_for_password(password_hash: String) -> Result<String, String> {
+pub async fn get_local_records_for_password(password_hash: String) -> Result<String, String> {
     database::get_local_records(&password_hash).await
+}
+
+#[tauri::command]
+pub async fn get_remote_records_for_password(password_hash: String) -> Result<String, String> {
+    rest_api::get_remote_records(&password_hash).await
 }
 
 /// This function attempts to determine whether the application has been
@@ -153,7 +173,7 @@ pub async fn select_random_characters(text: String, length: i32) -> Result<Strin
 
 #[tauri::command]
 pub async fn store_record(password_hash_hex: String, record: String) -> Result<String, String> {
-    let json = match json::parse(&record) {
+    let mut json = match json::parse(&record) {
         Ok(value) => value,
         Err(error) => {
             return Err(format!(
@@ -162,6 +182,11 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
             ))
         }
     };
+    json["plauzible"] = JsonValue::new_object();
+    json["plauzible"]["ownerId"] = JsonValue::String(Uuid::new_v4().to_string());
+
+    let record = json::stringify(json.clone());
+
     let mut pool = database::connect_to_database().await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
     let data = utilities::encrypt(&password_hash_hex, &nonce_hex, &record).await?;
@@ -217,6 +242,17 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 }
 
 #[tauri::command]
+pub async fn store_remote_record(password_hash: String, record: String) -> Result<String, String> {
+    match rest_api::create_remote_record(&password_hash, &record).await {
+        Ok(output) => {
+            println!("OUTPUT: {}", output);
+            Ok(output)
+        },
+        Err(error) => Err(error),
+    }
+}
+
+#[tauri::command]
 pub async fn update_record(
     password_hash_hex: String,
     record_id: i64,
@@ -250,6 +286,14 @@ pub async fn update_record(
     };
 
     Ok(json::stringify(object))
+}
+
+#[tauri::command]
+pub async fn update_remote_record(password_hash: String, record_id: i64, record: String) -> Result<String, String> {
+    match rest_api::update_remote_record(&password_hash, record_id, &record).await {
+        Ok(output) => Ok(output),
+        Err(error) => Err(error),
+    }
 }
 
 #[tauri::command]

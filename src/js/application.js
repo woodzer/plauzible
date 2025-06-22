@@ -6,6 +6,7 @@ import { camelCaseString, CHARACTER_SETS, showError, showSuccess, uniqueAndSortS
 import { importBitwardenJSONFile } from "./imports.js";
 import RecordImporter from "./record_importer.js";
 import ImportReport from "./import_report.js";
+import RecordAPI from "./record_api.js";
 
 const MINIMUM_PASSWORD_LENGTH = 10;
 const RECORD_PROPERTIES_TO_IGNORE = [];
@@ -91,12 +92,10 @@ function createRecord(event) {
     if(validateRecordForm()) {
         if(settings.passwordHash) {
             let data = getRecordContent();
+            let api = new RecordAPI(settings, invoke);
 
-            delete data.id;
-            delete data.passwordCopy;
-            invoke("store_record", {passwordHashHex: settings.passwordHash, record: JSON.stringify(data)})
-                .then((output) => {
-                    let listRecord = JSON.parse(output);
+            api.create(data)
+                .then((listRecord) => {
                     settings.records.push(listRecord);
                     settings.record = settings.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
                     populateRecordListTable();
@@ -125,9 +124,10 @@ function copyPasswordToTheClipboard(event) {
         let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
 
         if(record) {
-            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
-                .then((json) => {
-                    let object = JSON.parse(json);
+            let api = new RecordAPI(settings, invoke);
+
+            api.decrypt(record)
+                .then((object) => {
                     return(writeText(object.password));
                 })
                 .then(() => {
@@ -157,9 +157,10 @@ function copyUserNameToTheClipboard(event) {
         let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
 
         if(record) {
-            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
-                .then((json) => {
-                    let object = JSON.parse(json);
+            let api = new RecordAPI(settings, invoke);
+
+            api.decrypt(record)
+                .then((object) => {
                     return(writeText(object.userName));
                 })
                 .then(() => {
@@ -200,11 +201,12 @@ function editRecord(recordId) {
 
     touchTimeout();
     if(record) {
-        invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
-            .then((json) => {
-                let object = JSON.parse(json);
+        let api = new RecordAPI(settings, invoke);
 
+        api.decrypt(record)
+            .then((object) => {
                 object.id = recordId;
+
                 resetForm("update");
                 populateRecordForm(object);
                 showSection("record_form")
@@ -333,16 +335,23 @@ function hideVisibleSection() {
 }
 
 function initializeApplication() {
-    setupPageHandlers();
-    setupPasswordHandling();
-    setupModals();
-    setupRecordForm();
-    setupFileImporter();
-    setupNavigationBar();
-    showPasswordSection();
-    setupDropdownSelects();
-    setupRecordFilters();
-    touchTimeout();
+    invoke("get_application_settings")
+        .then((data) => {
+            let object = JSON.parse(data);
+            settings.mode = object.operationMode;
+
+            setupPageHandlers();
+            setupPasswordHandling();
+            setupModals();
+            setupRecordForm();
+            setupFileImporter();
+            setupNavigationBar();
+            showPasswordSection();
+            setupDropdownSelects();
+            setupRecordFilters();
+            touchTimeout();
+        })
+        .catch((error) => showError(`Failed to get application settings. Cause: ${error}`));
 }
 
 function launchURL(url) {
@@ -358,7 +367,9 @@ function onDeleteRecordConfirmed(event) {
         let recordId = parseInt(source.dataset.recordId);
 
         if(!isNaN(recordId)) {
-            invoke("delete_record", {recordId: recordId})
+            let api = new RecordAPI(settings, invoke);
+
+            api.delete(recordId)
                 .then((id) => {
                     settings.records = settings.records.filter((record) => record.id !== id);
                     source.closest(".modal").classList.remove("is-active");
@@ -413,9 +424,10 @@ function onLaunchURL(event) {
         let record = settings.records.find((entry) => `${entry.id}` === target.dataset.recordId);
 
         if(record) {
-            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: record.data})
-                .then((json) => {
-                    let object = JSON.parse(json);
+            let api = new RecordAPI(settings, invoke);
+
+            api.decrypt(record)
+                .then((object) => {
                     return(launchURL(object.url));
                 })
                 .catch((error) => showError(`Failed to open URL. Cause: ${error}`));
@@ -798,9 +810,11 @@ function setupNavigationBar() {
         element.addEventListener("click", endSession);
     });
 
-    document.querySelector(".settings-button").addEventListener("click", (event) => {
-        event.preventDefault();
-        showSettings();
+    document.querySelectorAll(".settings-button").forEach((element) => {
+        element.addEventListener("click", (event) => {
+            event.preventDefault();
+            showSettings();
+        });
     });
 }
 
@@ -820,6 +834,10 @@ function setupPageHandlers() {
                         break;
                     case "file_importer":
                         showFileImporterSection();
+                        setTimeout(emptyIFrame, 500);
+                        break;
+                    case "password_section":
+                        showPasswordSection();
                         setTimeout(emptyIFrame, 500);
                         break;
                     case "record_form":
@@ -952,12 +970,12 @@ function setupRowEventHandlers(row, record) {
 function showApplicationSection(passwordHash) {
     showSection("loading_section")
         .then(() => {
-            return(invoke("get_records_for_password", {passwordHash: passwordHash}));
-        })
-        .then((data) => {
-            let object = JSON.parse(data);
+            let api = new RecordAPI(settings, invoke);
 
-            settings.records = object.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
+            return(api.getAll());
+        })
+        .then((records) => {
+            settings.records = records;
             updateRecordTags();
             populateRecordListTable();
             populateTagFilterList();
@@ -1133,27 +1151,10 @@ function updateRecord(event) {
         if(settings.passwordHash) {
             let recordId = parseInt(record.id);
             let recordOffset = settings.records.findIndex((r) => r.id == recordId);
+            let api = new RecordAPI(settings, invoke);
 
-            invoke("decrypt_record", {passwordHash: settings.passwordHash, record: settings.records[recordOffset].data})
-                .then((recordJSON) => {
-                    let object = JSON.parse(recordJSON);
-
-                    if(record.password != record.passwordCopy) {
-                        if(!object.passwordHistory) {
-                            object.passwordHistory = [];
-                        }
-                        object.passwordHistory.push({changed: new Date(), password: record.passwordCopy});
-                    }
-
-                    delete record.id;
-                    delete record.passwordCopy;
-                    object = Object.assign(object, record)
-
-                    return(invoke("update_record", {passwordHashHex: settings.passwordHash, recordId: recordId, record: JSON.stringify(object)}));
-                })
-                .then((output) => {
-                    let listRecord = JSON.parse(output);
-
+            api.update(recordId, settings.records[recordOffset], record)
+                .then((listRecord) => {
                     settings.records[recordOffset] = listRecord;
                     settings.record = settings.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name));
                     populateRecordListTable();

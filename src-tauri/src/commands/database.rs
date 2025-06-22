@@ -372,24 +372,6 @@ pub async fn update_setting_by_name(
 
 /// Writes data to the data_records database table. Returns the id of the record
 /// written if successful.
-// pub async fn write_record(data: &str) -> Result<i64, String> {
-//     let pool = connect_to_database().await?;
-
-//     match sqlx::query(CREATE_RECORD_SQL)
-//         .bind(data)
-//         .fetch_all(&pool).await {
-//         Ok(rows) => {
-//             match rows.first() {
-//                 Some(row) => Ok(row.get("id")),
-//                 None => Err(String::from("Insert did not return record details."))
-//             }
-//         },
-//         Err(error) => Err(format!("Error writing record data. Cause: {:?}", error))
-//     }
-// }
-
-/// Writes data to the data_records database table. Returns the id of the record
-/// written if successful.
 pub async fn write_record_in_transaction(
     transaction: &mut Transaction<'_, Sqlite>,
     data: &str,

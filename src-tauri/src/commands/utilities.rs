@@ -7,6 +7,7 @@ use argon2::{password_hash::SaltString, Argon2};
 use hex;
 use rand::prelude::*;
 use std::str;
+use crate::commands::database;
 
 pub struct FakeRecord {
     pub data: String,
@@ -177,6 +178,19 @@ pub fn generate_nonce() -> String {
 fn generate_salt() -> String {
     let salt = SaltString::generate(&mut OsRng);
     hex::encode(salt.as_str().as_bytes())
+}
+
+/// Determines the operation mode of the application based on whether a service
+/// key setting is present in the database. Returns a Result. On success the
+/// success the result will contain a String indicating the operation mode.
+/// The operation mode can be either "local" or "remote".
+pub async fn get_operation_mode() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let setting = database::get_setting(&mut pool, "service.key").await?;
+    match setting.value.trim() {
+        "" => Ok("local".to_string()),
+        _ => Ok("remote".to_string())
+    }
 }
 
 /// Validates a string containing a salt value. Salt values must be 44 characters

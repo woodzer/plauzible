@@ -103,11 +103,13 @@ export default class RecordAPI {
             .then((output) => {
                 try {
                     let records = JSON.parse(output);
-                    console.log("RECORDS:", records);
                     return(records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name)));
                 } catch(exception) {    
                     throw(`Failed to parse record list content as a JSON object. Cause: ${exception}`);
                 }
+            })
+            .catch((error) => {
+                throw(`Failed to retrieve records from the remote service. Cause: ${error}`);
             });
     }
 

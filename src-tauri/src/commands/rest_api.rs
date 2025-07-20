@@ -52,6 +52,10 @@ pub async fn create_remote_record(password_hash: &str, record: &str) -> Result<S
                         }
                     };
 
+    if !response.status().is_success() {
+        return Err("Remote service returned an error, service may be offline.".to_string());
+    }
+
     let body = match response.text().await {
         Ok(body) => body,
         Err(error) => {
@@ -144,7 +148,7 @@ pub async fn delete_remote_record(password_hash: &str, record_json: &str, record
                     };
 
     if !response.status().is_success() {
-        return Err(format!("Failed to delete the record in the remote service. Cause: Received status code {:?}", response.status()));
+        return Err("Failed to delete the record in the remote service.".to_string());
     }
  
     Ok(record_id)
@@ -167,6 +171,10 @@ pub async fn get_remote_records(password_hash: &str) -> Result<String, String> {
                             return Err(format!("Failed to send request to the remote service. Cause: {:?}", error))
                         }
                     };
+
+    if !response.status().is_success() {
+        return Err("Remote service returned an error, service may be offline.".to_string());
+    }
 
     let body = match response.text().await {
         Ok(body) => body,
@@ -301,7 +309,7 @@ pub async fn update_remote_record(password_hash: &str, record_id: i64, record_js
                     };
 
     if !response.status().is_success() {
-        return Err(format!("Failed to update the record in the remote service. Cause: Received status code {:?}", response.status()));
+        return Err("Failed to update the record in the remote service.".to_string());
     }
  
     let object = object! {

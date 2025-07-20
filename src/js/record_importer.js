@@ -1,7 +1,8 @@
 const { invoke } = window.__TAURI__.core;
 
 export default class RecordImporter {
-    constructor(existingRecords, newRecords, passwordHash, importReport, ignoreDuplicates=true) {
+    constructor(recordAPI, existingRecords, newRecords, passwordHash, importReport, ignoreDuplicates=true) {
+        this.recordAPI = recordAPI;
         this.existingRecords = existingRecords;
         this.newRecords = newRecords;
         this.passwordHash = passwordHash;
@@ -69,7 +70,7 @@ export default class RecordImporter {
     processEntry(record, passwordHash) {
         this.importReport.write(`Importing the ${record.name} entry.`);
         delete record.id;
-        return invoke("store_record", {passwordHashHex: passwordHash, record: JSON.stringify(record)})
+        return this.recordAPI.create(record)
             .then((output) => {
                 this.importReport.write(`Successfully imported the ${record.name} entry.`);
             })

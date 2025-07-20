@@ -1,6 +1,5 @@
 const { invoke } = window.__TAURI__.core;
 
-
 import { showError, showSuccess } from "./utilities.js";
 
 function hideSensitiveSettings(event) {
@@ -15,6 +14,10 @@ function hideSensitiveSettings(event) {
     fieldSection.querySelector("button.update-encryption-settings").disabled = true;
 }
 
+function loadSubscribePage() {
+    return(invoke("open_url", {url: "https://d32c3f8665d7.ngrok-free.app/checkout.html"}));
+}
+
 function initializeSettings() {
     console.log("Initializing the settings user interface.");
     setUpEventHandlers();
@@ -22,7 +25,6 @@ function initializeSettings() {
         .then((json) => {
             let records = JSON.parse(json);
 
-            console.log("Record:", records);
             populateSettings(records);
             showSettings();
         })
@@ -32,15 +34,19 @@ function initializeSettings() {
 function populateSettings(records) {
     let field = document.querySelector('input[name="serviceKey"]');
     let record = records.find((r) => r.key === "service.key");
+    let serviceURLSet = false;
+    let serviceKeySet = false;
 
     if(field && record) {
         field.value = record.value;
+        serviceKeySet = (`${record.value}`.trim() !== "");
     }
 
     field = document.querySelector('input[name="serviceURL"]');
     record = records.find((r) => r.key === "service.url");
     if(field && record) {
         field.value = record.value;
+        serviceURLSet = (`${record.value}`.trim() !== "");
     }
 
     let button = document.querySelector("button.update-encryption-settings")
@@ -56,6 +62,10 @@ function populateSettings(records) {
     record = records.find((r) => r.key === "password.character_set");
     if(field && record) {
         field.value = record.value;
+    }
+
+    if(!serviceKeySet && !serviceURLSet) {
+        document.querySelector("button.create-subscription").disabled = false;
     }
 }
 
@@ -82,6 +92,15 @@ function setUpEventHandlers() {
             document.querySelector("button.update-encryption-settings").disabled = false;
         });
     }
+
+    let fields = Array.from(document.querySelectorAll("input[name='serviceKey'], input[name='serviceURL']"));
+    let subscriptionButton = document.querySelector("button.create-subscription");
+    fields.forEach((field) => {
+        field.addEventListener("input", () => {
+            subscriptionButton.disabled = !(fields[0].value.trim() === "" && fields[1].value.trim() === "");
+        });
+    });
+    subscriptionButton.addEventListener("click", loadSubscribePage);
 
     button = document.querySelector("button.update-service-settings");
     if(button) {
@@ -119,7 +138,6 @@ function showSensitiveSettings(event) {
             let fieldSection = document.querySelector("#encryption_settings_details");
             let field = fieldSection.querySelector('input[name="encryptionSettings"]');
 
-            console.log("Records:", records);
             let salt = records.find((e) => e.key === "encryption.salt").value;
             let nonce = records.find((e) => e.key === "encryption.nonce").value;
             field.value = `${salt}:${nonce}`;

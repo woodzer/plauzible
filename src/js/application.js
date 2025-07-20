@@ -473,7 +473,8 @@ function onStartImport(event) {
     if(typeField.value === "bitwarden") {
         importBitwardenJSONFile(pathField.value, report)
             .then((records) => {
-                let importer = new RecordImporter(settings.records, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
+                let api = new RecordAPI(settings, invoke);
+                let importer = new RecordImporter(api, settings.records, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
 
                 importer.addProgressListener((event) => {
                     let progress = section.querySelector("#file_importer_progress_bar");
@@ -612,7 +613,7 @@ function populateAvailableTagsList() {
         let fragment = document.createDocumentFragment();
 
         listControl.innerHTML = "";
-        labels.forEach((label) => {
+        labels.filter((label) => label.trim() !== "").forEach((label) => {
             let entry = template.content.cloneNode(true);
             let checkbox = entry.querySelector(".tag-checkbox");
 
@@ -853,6 +854,16 @@ function setupPageHandlers() {
             }
         }
     });
+
+    let element = document.querySelector(".close-frame-link");
+    if(element) {
+        element.addEventListener("click", (event) => {
+            let section = settings.previousSection || "password_section";
+
+            event.preventDefault();
+            showSection(section);
+        });
+    }
 }
 
 function setupPasswordHandling() {
@@ -980,6 +991,13 @@ function showApplicationSection(passwordHash) {
             populateRecordListTable();
             populateTagFilterList();
             showSection("application_section");
+        })
+        .catch((error) => {
+            console.error(`Load of reccords failed. Cause: ${error}`);
+            showError(`${error}`);
+            setTimeout(() => {
+                showPasswordSection();
+            }, 2500);
         });
 }
 

@@ -31,6 +31,19 @@
     color: #555;
 }
 
+.close-iframe-section {
+    color: #555;
+    font-weight: bold;
+    height: 48px;
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+
+.close-iframe-section:visited {
+    color: #555;
+}
+
 .error-log-line {
     background-color: rgba( 255, 0, 0, 0.3);
 }
@@ -114,6 +127,12 @@ html {
     font-size: 1.2em;
 }
 
+#subpage_iframe {
+    height: 100%;
+    margin-top: 50px;
+    width: 100%;
+}
+
 .table-row .table-column .buttons.hidden {
     display: none;
 }
@@ -150,8 +169,12 @@ html {
 .top-right-button {
     color: #555;
     position: absolute;
-    right: 0px;
+    right: 10px;
     top: 10px;
+}
+
+.top-right-button a {
+    color: #555;
 }
 
 .top-right-button a:visited {

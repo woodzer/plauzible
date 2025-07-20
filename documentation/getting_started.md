@@ -52,12 +52,22 @@ With Stripe set up, you can open the ``docker-compose.yml`` file, which is found
 folder of the repository. Inside this file you will need to configure the following environment
 variables for the ``app`` entry...
 
+ - **API_URL_BASE** - This should be set to the value provided by ``ngrok``, if you are using
+   it, or ``localhost:9292`` is you are using the service purely locally (update the port
+   number if this is not the correct one).
  - **NGROK_HOST** - The host name for your currently running ``ngrok`` instance. Note this is
    just the host value.
  - **STRIPE_PUBLISHABLE_KEY** - The publishable key (i.e. the one that starts ``pk``) for your
    your Stripe sandbox.
  - **STRIPE_SECRET_KEY** - The publishable key (i.e. the one that starts ``sk``) for your
    your Stripe sandbox.
+
+You will also need a [Mailtrap](https://mailtrap.io) account. This account will provide a
+details that need to be configured into the environment variables for the ``sidekiq``
+server in the docker-compose file. These are the variables that need to be set...
+
+ - **MAILTRAP_API_KEY** - Use the test/sandbox key provided by Mailtrap for testing purposes.
+ - **MAILTRAP_API_URL** - Use ``sandbox.api.mailtrap.io`` for testing.
 
 Note that Stripe sandbox instances are often reset, so you may need to reset this values when
 there is a substantial amount of time between testing efforts.

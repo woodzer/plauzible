@@ -47,10 +47,34 @@ them...
 servers and with Github to grant access. If this is not the case then it will need
 to be done before proceeding.
 
+### Installing SSH On A Remote Server
+
+If you need to install an SSH key on a remote server then you need to copy the
+public key part of the pair (i.e. ``id_rsa.pub``) to the server, perhaps using
+a utility such as ``scp``. Once the file is available on the remote machine, log
+into the machine as the user you are adding the key for. Ensure that this user
+has a ``.ssh`` folder and create it if it does not (see above for how to do
+this). Then run the following commands from the users ``$HOME`` folder to add the
+key for the user...
+
+```shell
+  $> touch .ssh/authorized_keys
+  $> cat id_rsa.pub >> .ssh/authorized_keys
+```
+
+You will also need a copy of the full pair installed on the service. Use a
+utility such as ``scp`` to copy both key files into the ``.ssh`` folder of the
+deploy user on the remote machine. Ensure these files have the correct
+permissions set on them (see above for details).
+
+You can test whether this is successful byt attempting to SSH to the remote
+machine using the SSH key pair.
+
 ## Clone The Plauzible Service Repository
 
-Run the following commands to make a local copy of the Plauizble Service Github
-repository...
+The first time you are going to deploy you need to clone the Github repository
+to your deployment environment. To do this,run the following commands to make a
+local copy of the Plauizble Service Github repository...
 
 ```shell
 $> mkdir src

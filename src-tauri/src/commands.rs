@@ -2,6 +2,7 @@ mod database;
 mod rest_api;
 mod utilities;
 
+use std::path::Path;
 use json::JsonValue;
 use rand::prelude::*;
 use uuid::Uuid;
@@ -114,7 +115,7 @@ pub async fn get_remote_records_for_password(password_hash: String) -> Result<St
 #[tauri::command]
 pub fn has_been_initialized() -> bool {
     match database::get_existing_database_path() {
-        Some(_) => true,
+        Some(path) => Path::new(&path).exists(),
         _ => false,
     }
 }

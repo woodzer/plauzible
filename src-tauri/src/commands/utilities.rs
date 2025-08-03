@@ -4,6 +4,9 @@ use aes_gcm::{
     Aes256Gcm, Key, KeyInit, Nonce,
 };
 use argon2::{password_hash::SaltString, Argon2};
+use directories::{ProjectDirs};
+use std::fs::{create_dir_all};
+use std::path::PathBuf;
 use hex;
 use rand::prelude::*;
 use std::str;
@@ -13,6 +16,28 @@ pub struct FakeRecord {
     pub data: String,
     pub nonce: String,
     pub salt: String,
+}
+
+/// This function generates a PathBuf representing the application data directory.
+pub fn get_application_data_directory() -> Result<PathBuf, String> {
+    let project_dirs = ProjectDirs::from("com.plauzible", "plauzible", "plauzible").unwrap();
+    let data_dir = project_dirs.data_dir();
+    Ok(data_dir.to_path_buf())
+}
+
+/// This function generates a PathBuf representing the application data directory.
+/// If the directory does not exist then an attempt is made to create it.
+pub fn get_or_create_application_data_directory() -> Result<PathBuf, String> {
+    let data_dir = get_application_data_directory()?;
+
+    if !data_dir.exists() {
+        match create_dir_all(&data_dir) {
+            Err(error) => Err(format!("Failed to create application data directory. Cause: {:?}", error)),
+            _ => Ok(data_dir.to_path_buf())
+        }
+    } else {
+        Ok(data_dir.to_path_buf())
+    }
 }
 
 /// Takes the application salt, nonce and user password and attempts to

@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::str;
 
-use crate::commands::utilities;
+use crate::commands::utilities::{self, get_application_data_directory, get_or_create_application_data_directory};
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
@@ -38,9 +38,8 @@ pub struct SettingRecord {
 pub fn create_database() -> Result<String, String> {
     // Attempt to locate the database template file.
     let template_path = get_database_template_path()?;
-    let mut target_path = template_path.clone();
+    let mut target_path = get_or_create_application_data_directory()?;
 
-    target_path.pop();
     target_path.push("plauzible");
     target_path.set_extension("db");
 
@@ -67,6 +66,7 @@ pub async fn connect_to_database() -> Result<Pool<Sqlite>, String> {
         Some(path) => path,
         _ => return Err(String::from("Unable to locate the application database.")),
     };
+
     let settings = SqliteConnectOptions::new()
         .filename(&database_path)
         .create_if_missing(false);
@@ -185,29 +185,14 @@ pub fn get_database_template_path() -> Result<PathBuf, String> {
 /// current working directory. If it is not found then None is returned.
 pub fn get_existing_database_path() -> Option<String> {
     // Attempt to locate the database template file.
-    let current_dir = match env::current_dir() {
-        Ok(path_buffer) => path_buffer,
-        _ => return None,
+    let mut path = match get_application_data_directory() {
+        Ok(path) => path,
+        Err(_) => return None,
     };
 
-    let mut path = current_dir.clone();
     path.push("plauzible");
     path.set_extension("db");
-
-    if !path.exists() || !path.is_file() {
-        path.pop();
-        path.pop();
-        path.push("plauzible");
-        path.set_extension("db");
-    } else {
-        return Some(format!("{}", path.display()));
-    }
-
-    if path.exists() && path.is_file() {
-        Some(format!("{}", path.display()))
-    } else {
-        None
-    }
+    Some(format!("{}", path.display()))
 }
 
 /// Fetches a list of all of the records from the local database that can be

@@ -10,6 +10,7 @@ const CHARACTER_SETS = {
     alphanumeric_mixed: ALPHANUMERIC_MIXED,
     alphanumeric_mixed_symbols: ALPHANUMERIC_MIXED_SYMBOLS
 };
+const CURRENT_VERSION = "1.0.0";
 
 /**
  * This function takes an input string in snakecase and converts it to the
@@ -27,6 +28,21 @@ function camelCaseString(inputText) {
         .join(""));
 }
 
+/**
+ * This function fetches details of the current client application from the
+ * Plauzible server. The response is a JSON object with version and url
+ * properties. The version property is the current latest version of the
+ * client application. The URL represents the URL where the current client
+ * application can be downloaded.
+ */
+function fetchApplicationVersionDetails() {
+    return fetch("https://plauzible.com/api/client/version")
+        .then((response) => response.json())
+        .catch((error) => {
+            console.error("Failed to check application version.Cause:", error);
+        });
+}
+
 
 function showError(message) {
     console.error("ERROR:", message);
@@ -35,6 +51,15 @@ function showError(message) {
         status: "error",
         text: message,
         title: "Error"
+    });
+}
+
+function showInfo(message) {
+    new Notify({
+        autotimeout: 10000,
+        status: "info",
+        text: message,
+        title: "Information"
     });
 }
 
@@ -107,10 +132,13 @@ export {
     ALPHANUMERIC_MIXED,
     ALPHANUMERIC_MIXED_SYMBOLS,
     CHARACTER_SETS,
+    CURRENT_VERSION,
     DEFAULT_CHARACTER_SET,
     DEFAULT_PASSWORD_LENGTH,
     camelCaseString,
+    fetchApplicationVersionDetails,
     showError,
+    showInfo,
     showSuccess,
     watchClassList,
     watchSpecificClass,

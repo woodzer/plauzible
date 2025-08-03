@@ -2,7 +2,15 @@ const { invoke } = window.__TAURI__.core;
 const { writeText } = window.__TAURI__.clipboardManager;
 const { open } = window.__TAURI__.dialog;
 
-import { camelCaseString, CHARACTER_SETS, showError, showSuccess, uniqueAndSortStringList, watchSpecificClass } from "./utilities.js";
+import { camelCaseString,
+         CHARACTER_SETS,
+         CURRENT_VERSION,
+         fetchApplicationVersionDetails,
+         showError,
+         showInfo,
+         showSuccess,
+         uniqueAndSortStringList,
+         watchSpecificClass } from "./utilities.js";
 import { importBitwardenJSONFile } from "./imports.js";
 import RecordImporter from "./record_importer.js";
 import ImportReport from "./import_report.js";
@@ -349,6 +357,7 @@ function initializeApplication() {
             showPasswordSection();
             setupDropdownSelects();
             setupRecordFilters();
+            runVersionCheck();
             touchTimeout();
         })
         .catch((error) => showError(`Failed to get application settings. Cause: ${error}`));
@@ -694,6 +703,17 @@ function resetForm(mode) {
     } else {
         console.error("Unable to get record content as form section not found on the page.");
     }
+}
+
+function runVersionCheck() {
+    fetchApplicationVersionDetails()
+        .then((data) => {
+            console.log("Version Data:", data);
+            if(data.version !== CURRENT_VERSION) {
+                console.log("New version available:", data.version);
+                showInfo(`<p>A new version of the Plauzible client application is available <a href="${data.url}" target="_blank">here</a>.</p>`);
+            }
+        });
 }
 
 function setupDropdownSelects() {

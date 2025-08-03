@@ -15,7 +15,7 @@ function hideSensitiveSettings(event) {
 }
 
 function loadSubscribePage() {
-    return(invoke("open_url", {url: "https://d32c3f8665d7.ngrok-free.app/checkout.html"}));
+    return(invoke("open_url", {url: "https://plauzible.com/checkout"}));
 }
 
 function initializeSettings() {

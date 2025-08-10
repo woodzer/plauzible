@@ -2,6 +2,8 @@ const { invoke } = window.__TAURI__.core;
 
 import { showError, showSuccess } from "./utilities.js";
 
+let localSettings = {};
+
 function hideSensitiveSettings(event) {
     let fieldSection = document.querySelector("#encryption_settings_details");
     let field = fieldSection.querySelector('input[name="encryptionSettings"]');
@@ -15,16 +17,27 @@ function hideSensitiveSettings(event) {
 }
 
 function loadSubscribePage() {
-    return(invoke("open_url", {url: "https://plauzible.com/checkout"}));
+    // return(invoke("open_url", {url: "https://plauzible.com/checkout"}));
+    return(invoke("open_url", {url: "https://872bf12edbde.ngrok-free.app/checkout"}));
+}
+
+function loadUnsubscribePage() {
+    let key = localSettings["service.key"];
+    // return(invoke("open_url", {url: `https://plauzible.com/unsubscribe?key=${key}`}));
+    return(invoke("open_url", {url: `https://872bf12edbde.ngrok-free.app/unsubscribe?key=${key}`}));
 }
 
 function initializeSettings() {
     console.log("Initializing the settings user interface.");
-    setUpEventHandlers();
     invoke("get_standard_settings")
         .then((json) => {
             let records = JSON.parse(json);
 
+            records.forEach((record) => {
+                localSettings[record.key] = record.value;
+            });
+
+            setUpEventHandlers();
             populateSettings(records);
             showSettings();
         })
@@ -93,14 +106,9 @@ function setUpEventHandlers() {
         });
     }
 
-    let fields = Array.from(document.querySelectorAll("input[name='serviceKey'], input[name='serviceURL']"));
-    let subscriptionButton = document.querySelector("button.create-subscription");
-    fields.forEach((field) => {
-        field.addEventListener("input", () => {
-            subscriptionButton.disabled = !(fields[0].value.trim() === "" && fields[1].value.trim() === "");
-        });
-    });
-    subscriptionButton.addEventListener("click", loadSubscribePage);
+    updateSubscriptionButtons();
+    document.querySelector("button.create-subscription").addEventListener("click", loadSubscribePage);
+    document.querySelector("button.end-subscription").addEventListener("click", loadUnsubscribePage);
 
     button = document.querySelector("button.update-service-settings");
     if(button) {
@@ -207,9 +215,24 @@ function updateRemoteServiceSettings(event) {
             serviceUrl: serviceURLField.value
         })
         .then(() => {
+            localSettings["service.key"] = serviceKeyField.value;
+            localSettings["service.url"] = serviceURLField.value;
+            updateSubscriptionButtons();
             showSuccess("Remote service settings successfully updated.");
         })
         .catch((error) => showError(`Failed to update remote service settings. Cause: ${error}`));
+    }
+}
+
+function updateSubscriptionButtons() {
+    let subscriptionButtons = Array.from(document.querySelectorAll("button.create-subscription, button.end-subscription"));
+
+    if(localSettings["service.key"] === "") {
+        subscriptionButtons[0].classList.remove("is-hidden");
+        subscriptionButtons[1].classList.add("is-hidden");
+    } else {
+        subscriptionButtons[0].classList.add("is-hidden");
+        subscriptionButtons[1].classList.remove("is-hidden");
     }
 }
 

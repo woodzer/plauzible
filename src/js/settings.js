@@ -1,4 +1,4 @@
-const { invoke } = window.__TAURI__.core;
+const { invoke } = (window.__TAURI__ || window.parent.window.__TAURI__).core;
 
 import { showError, showSuccess } from "./utilities.js";
 

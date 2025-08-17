@@ -1297,6 +1297,9 @@ function verifyTermsAcceptance(onAcceptance) {
                     settings.termsAccepted = result;
                     modal.classList.remove("is-active");
                     onAcceptance();
+                })
+                .catch((error) => {
+                    console.warn(`Failed to accept terms of service. Cause: ${error}`);
                 });
         };
         let cancelHandler = (event) => {
@@ -1309,11 +1312,15 @@ function verifyTermsAcceptance(onAcceptance) {
         });
         modal.classList.add("is-active");
     } else if(settings.termsRemoted === "false") {
+        let modal = document.querySelector("#terms_of_service_modal");
         invoke("terms_accepted")
                 .then((result) => {
                     settings.termsAccepted = result;
                     modal.classList.remove("is-active");
                     onAcceptance();
+                })
+                .catch((error) => {
+                    console.warn(`Failed to accept terms of service. Cause: ${error}`);
                 });
     } else {
         onAcceptance();

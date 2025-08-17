@@ -41,7 +41,7 @@ pub async fn create_remote_record(password_hash: &str, record: &str) -> Result<S
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}", service_settings.url, session_key);
     let response = match client.post(url)
-                    .header("X-API-Key", service_settings.key)
+                    .header("Plauzible-API-Key", service_settings.key)
                     .header("Content-Type", "application/json")
                     .body(json::stringify(data))
                     .send()
@@ -136,7 +136,7 @@ pub async fn delete_remote_record(password_hash: &str, record_json: &str, record
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client.delete(url)
-                   .header("X-API-Key", settings.key)
+                   .header("Plauzible-API-Key", settings.key)
                    .header("Content-Type", "application/json")
                    .body(json::stringify(data))
                    .send()
@@ -162,7 +162,7 @@ pub async fn get_remote_records(password_hash: &str) -> Result<String, String> {
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}", settings.url, session_key);
     let response = match client.get(url)
-                   .header("X-API-Key", settings.key)
+                   .header("Plauzible-API-Key", settings.key)
                    .header("Content-Type", "application/json")
                    .send()
                    .await {
@@ -297,7 +297,7 @@ pub async fn update_remote_record(password_hash: &str, record_id: i64, record_js
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client.put(url)
-                   .header("X-API-Key", settings.key)
+                   .header("Plauzible-API-Key", settings.key)
                    .header("Content-Type", "application/json")
                    .body(json::stringify(data))
                    .send()

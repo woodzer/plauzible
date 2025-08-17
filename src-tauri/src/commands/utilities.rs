@@ -218,6 +218,93 @@ pub async fn get_operation_mode() -> Result<String, String> {
     }
 }
 
+/// Returns a boolean value indicating whether the terms of service have been
+/// accepted by the user. Returns a Result. On success the result will contain
+/// a string value that will be either "true" or "false" to indicate whether the
+/// terms have been accepted.
+pub async fn get_terms_accepted() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let setting = database::get_setting_or_default(&mut pool, "terms.accepted", "false").await?;
+    Ok(setting.value)
+}
+
+/// Returns a boolean value indicating whether the terms of service have been
+/// dispatched and recorded on the remote service. Returns a Result. On success
+/// the result will contain a string value that will be either "true" or "false"
+/// to indicate whether the terms have been accepted.
+pub async fn get_terms_remoted() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let setting = database::get_setting_or_default(&mut pool, "terms.remoted", "false").await?;
+    Ok(setting.value)
+}
+
+/// Records the terms of service acceptance in the database and, if possible,
+/// with the remote service. On success the result will contain a string value
+/// that will be either "true" or "false" to indicate whether the terms have
+/// been accepted.
+pub async fn record_terms_accepted() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let client = reqwest::Client::new();
+    let mut timestamp = chrono::Utc::now().timestamp();
+    let data = object! {
+        timestamp: timestamp
+    };
+    let service_url = match database::get_setting(&mut pool, "service.url").await {
+        Ok(url) => url.value,
+        Err(_) => "https://plauzible.com".to_string()
+    };
+    let service_key = match database::get_setting(&mut pool, "service.key").await {
+        Ok(key) => key.value,
+        Err(_) => "".to_string()
+    };
+    let terms_accepted = match database::get_setting_or_default(&mut pool, "terms.accepted", "false").await {
+        Ok(accepted) => accepted.value,
+        Err(_) => "false".to_string()
+    };
+    let terms_remoted = match database::get_setting_or_default(&mut pool, "terms.remoted", "false").await {
+        Ok(remoted) => remoted.value,
+        Err(_) => "false".to_string()
+    };
+
+    if terms_accepted != "false" {
+        timestamp = match terms_accepted.parse::<i64>() {
+            Ok(accepted) => {
+                match chrono::DateTime::<chrono::Utc>::from_timestamp(accepted, 0) {
+                    Some(date) => date.timestamp(),
+                    None => timestamp
+                }
+            },
+            _ => timestamp
+        };
+    }
+
+    if service_key.len() > 0 && terms_remoted == "false" {
+        match client.post(format!("{}/api/terms/accept", service_url))
+            .header("Plauzible-API-Key", service_key)
+            .header("Content-Type", "application/json")
+            .body(data.dump())
+            .send()
+            .await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        database::create_setting(&mut pool, "terms.remoted", "true").await?;
+                        if terms_accepted == "false" {
+                            database::create_setting(&mut pool, "terms.accepted", format!("{}", timestamp).as_str()).await?;
+                        }
+                    }
+                    Ok("true".to_string())
+                },
+                Err(error) => {
+                    Err(format!("Failed to send request to the remote service. Cause: {:?}", error))
+                }
+            }
+    } else {
+        database::create_setting(&mut pool, "terms.remoted", "false").await?;
+        database::create_setting(&mut pool, "terms.accepted", format!("{}", timestamp).as_str()).await?;
+        Ok("true".to_string())
+    }
+}
+
 /// Validates a string containing a salt value. Salt values must be 44 characters
 /// long and be a valid hexidecimal value.
 pub fn validate_salt(salt: &str) -> Result<String, String> {

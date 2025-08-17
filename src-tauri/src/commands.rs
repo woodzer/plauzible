@@ -43,7 +43,9 @@ pub fn get_database_path() -> String {
 #[tauri::command]
 pub async fn get_application_settings() -> Result<String, String> {
     let settings = object! {
-        operationMode: utilities::get_operation_mode().await?
+        operationMode: utilities::get_operation_mode().await?,
+        termsAccepted: utilities::get_terms_accepted().await?,
+        termsRemoted: utilities::get_terms_remoted().await?
     };
     Ok(settings.dump())
 }
@@ -251,6 +253,11 @@ pub async fn store_remote_record(password_hash: String, record: String) -> Resul
         },
         Err(error) => Err(error),
     }
+}
+
+#[tauri::command]
+pub async fn terms_accepted() -> Result<String, String> {
+    utilities::record_terms_accepted().await
 }
 
 #[tauri::command]

@@ -345,10 +345,14 @@ function hideVisibleSection() {
 function initializeApplication() {
     invoke("get_application_settings")
         .then((data) => {
+            console.log("Application settings:", data);
             let object = JSON.parse(data);
             settings.mode = object.operationMode;
+            settings.termsAccepted = object.termsAccepted;
+            settings.termsRemoted = object.termsRemoted;
 
             setupPageHandlers();
+            setupTermsOfService();
             setupPasswordHandling();
             setupModals();
             setupRecordForm();
@@ -675,6 +679,17 @@ function populateTagFilterList() {
     }
 }
 
+function requireTermsAcceptance(onAcceptance) {
+    let modal = document.querySelector("#terms_of_service_modal");
+    let eventListener = (event) => {
+        event.preventDefault();
+        modal.classList.remove("is-active");
+        onAcceptance();
+    };
+
+    modal.querySelector("button.submit-button").addEventListener("click", eventListener);
+}
+
 function resetForm(mode) {
     let section = document.querySelector("#record_form");
 
@@ -893,10 +908,10 @@ function setupPasswordHandling() {
         passwordSection.querySelector('input[name="sessionPassword"]').addEventListener("keypress", (event) => {
             const keyCode = event.code || event.key;
             if(keyCode === 'Enter') {
-                submitPassword(event);
+                verifyTermsAcceptance(() => submitPassword(event));
             }
         });
-        password_section.querySelector("#submit_password_button").addEventListener("click", submitPassword);
+        password_section.querySelector("#submit_password_button").addEventListener("click", (event) => verifyTermsAcceptance(() => submitPassword(event)));
     } else {
         console.error("Unable to locate the password section on the page.");
     }
@@ -995,6 +1010,19 @@ function setupRowEventHandlers(row, record) {
         } else {
             link.classList.add("is-hidden");
         }
+    }
+}
+
+function setupTermsOfService() {
+    let modal = document.querySelector("#terms_of_service_modal");
+
+    if(modal) {
+        let checkbox = modal.querySelector('input[name="termsAccepted"]');
+        let submitButton = modal.querySelector("button.submit-button");
+
+        checkbox.addEventListener("change", (event) => {
+            submitButton.disabled = !checkbox.checked;
+        });
     }
 }
 
@@ -1254,6 +1282,42 @@ function validateRecordForm(ignoreId) {
     }
 
     return(valid);
+}
+
+function verifyTermsAcceptance(onAcceptance) {
+    if(settings.termsAccepted === "false") {
+        let modal = document.querySelector("#terms_of_service_modal");
+        let submitButton = modal.querySelector("button.submit-button");
+        let cancelButtons = modal.querySelectorAll(".cancel-modal");
+        let submitHandler = (event) => {
+            event.preventDefault();
+            touchTimeout();
+            invoke("terms_accepted")
+                .then((result) => {
+                    settings.termsAccepted = result;
+                    modal.classList.remove("is-active");
+                    onAcceptance();
+                });
+        };
+        let cancelHandler = (event) => {
+            submitButton.removeEventListener("click", onAcceptance);
+        };
+
+        submitButton.addEventListener("click", submitHandler, {once: true});
+        cancelButtons.forEach((button) => {
+            button.addEventListener("click", cancelHandler, {once: true});
+        });
+        modal.classList.add("is-active");
+    } else if(settings.termsRemoted === "false") {
+        invoke("terms_accepted")
+                .then((result) => {
+                    settings.termsAccepted = result;
+                    modal.classList.remove("is-active");
+                    onAcceptance();
+                });
+    } else {
+        onAcceptance();
+    }
 }
 
 window.addEventListener("DOMContentLoaded", () => {

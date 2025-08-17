@@ -11,6 +11,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            commands::terms_accepted,
             commands::decrypt_record,
             commands::delete_database,
             commands::delete_record,

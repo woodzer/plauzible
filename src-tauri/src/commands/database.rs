@@ -10,6 +10,7 @@ use crate::commands::utilities::{self, get_application_data_directory, get_or_cr
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
+const CREATE_SETTING_SQL: &str = "insert into settings(key, value) values ($1, $2)";
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
@@ -56,6 +57,19 @@ pub fn create_database() -> Result<String, String> {
             error
         )),
         _ => Ok(format!("{}", target_path.display())),
+    }
+}
+
+/// Creates a new setting in the settings database table.
+pub async fn create_setting(pool: &mut Pool<Sqlite>, key: &str, value: &str) -> Result<(), String> {
+    match sqlx::query(CREATE_SETTING_SQL)
+        .bind(key)
+        .bind(value)
+        .execute(&*pool)
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(error) => Err(format!("Error creating setting. Cause: {:?}", error)),
     }
 }
 
@@ -302,6 +316,21 @@ pub async fn get_setting(pool: &mut Pool<Sqlite>, name: &str) -> Result<SettingR
         }
     };
     Ok(record)
+}
+
+/// Attempts to retrieve a named setting from the application settings database
+/// table. If the setting is not found then the default value is returned.
+pub async fn get_setting_or_default(pool: &mut Pool<Sqlite>, name: &str, default: &str) -> Result<SettingRecord, String> {
+    let default_value = SettingRecord {
+        id: 0,
+        key: name.to_string(),
+        value: default.to_string(),
+    };
+
+    match get_setting(pool, name).await {
+        Ok(record) => Ok(record),
+        Err(_) => Ok(default_value),
+    }
 }
 
 /// Remove the existing database (if it exists).

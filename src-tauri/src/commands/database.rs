@@ -10,7 +10,7 @@ use crate::commands::utilities::{self, get_application_data_directory, get_or_cr
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
-const CREATE_SETTING_SQL: &str = "insert into settings(key, value) values ($1, $2)";
+const CREATE_SETTING_SQL: &str = "insert into settings(key, value) values ($1, $2) on conflict do nothing";
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";

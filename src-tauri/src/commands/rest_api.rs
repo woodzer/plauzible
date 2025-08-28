@@ -287,12 +287,10 @@ pub async fn update_remote_record(password_hash: &str, record_id: i64, record_js
 
     // Encrypt the record and send it to the remote service.
     let encrypted_data = utilities::encrypt(password_hash, &settings.nonce, &json::stringify(json.clone())).await?;
-    println!("RECORD JSON: {}", json::stringify(json.clone()));
     let data = object! {
         data: encrypted_data.clone(),
         owner_id: owner_id
     };
-    println!("DATA: {}", json::stringify(data.clone()));
     let session_key = get_session_key(password_hash, &settings.salt)?;
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);

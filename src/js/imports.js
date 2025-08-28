@@ -1,4 +1,4 @@
-const { exists, readTextFile } = window.__TAURI__.fs;
+const { readTextFile } = window.__TAURI__.fs;
 
 function importBitwardenJSONFile(filePath, importReport) {
     if(filePath && filePath.trim() !== "") {

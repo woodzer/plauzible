@@ -82,6 +82,11 @@ export default class RecordImporter {
     async processEntries(records, passwordHash) {
         let entriesProcessed = 0;
 
+        // Set this to a non-zero value when using Ngrok.
+        // let interRequestDelayLength = 1000;
+        let interRequestDelayLength = 0;
+        const sleep = ms => new Promise(r => setTimeout(r, interRequestDelayLength));
+
         for(const record of records) {
             let percentage = Math.round((entriesProcessed / records.length) * 100);
             let event = new CustomEvent("progress", {detail: {percentage: percentage}});
@@ -89,6 +94,10 @@ export default class RecordImporter {
             await this.processEntry(record, passwordHash);
             entriesProcessed++;
             this.progressListeners.forEach((listener) => listener(event));
+
+            if(interRequestDelayLength > 0) {
+                await sleep(interRequestDelayLength);
+            }
         }
         this.progressListeners.forEach((listener) => listener(new CustomEvent("progress", {detail: {percentage: 100}})));
         this.completionListeners.forEach((listener) => listener(new CustomEvent("completion", {detail: {report: this.importReport}})));

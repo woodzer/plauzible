@@ -19,7 +19,6 @@ function addBaseSettings(settings) {
     let databaseURL = `sqlite:${settings.database}`;
     let connection;
 
-    console.log(`Database URL: ${databaseURL}`);
     Database.load(databaseURL)
         .then((c) => {
             connection = c;
@@ -38,7 +37,6 @@ function addBaseSettings(settings) {
             return connection.execute(INSERT_CONFIGURATION_SQL, [PASSWORD_CHARACTER_SET_KEY, DEFAULT_CHARACTER_SET, 0]);
         })
         .then(() => {
-            console.log("Base settings successfully stored.");
             connection.close();
             window.location.href = "application.html";
         })
@@ -86,7 +84,6 @@ function initializeApplication() {
         .then((data) => {
             let json = JSON.parse(data);
 
-            console.log("Base Settings:", json);
             addBaseSettings(json);
         })
         .catch((error) => {

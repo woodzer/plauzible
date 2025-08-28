@@ -35,8 +35,8 @@ function camelCaseString(inputText) {
  * client application. The URL represents the URL where the current client
  * application can be downloaded.
  */
-function fetchApplicationVersionDetails() {
-    return fetch("https://plauzible.com/api/client/version")
+function fetchApplicationVersionDetails(settings) {
+    return fetch(`${settings.serviceURL}/api/client/version`)
         .then((response) => response.json())
         .catch((error) => {
             console.error("Failed to check application version.Cause:", error);

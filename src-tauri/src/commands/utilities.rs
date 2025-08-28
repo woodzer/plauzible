@@ -218,6 +218,14 @@ pub async fn get_operation_mode() -> Result<String, String> {
     }
 }
 
+/// Returns the URL of the remote service. Returns a Result. On success the
+/// result will contain a string value that will be the URL of the remote service.
+pub async fn get_service_url() -> Result<String, String> {
+    let mut pool = database::connect_to_database().await?;
+    let setting = database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?;
+    Ok(setting.value)
+}
+
 /// Returns a boolean value indicating whether the terms of service have been
 /// accepted by the user. Returns a Result. On success the result will contain
 /// a string value that will be either "true" or "false" to indicate whether the
@@ -249,22 +257,10 @@ pub async fn record_terms_accepted() -> Result<String, String> {
     let data = object! {
         timestamp: timestamp
     };
-    let service_url = match database::get_setting(&mut pool, "service.url").await {
-        Ok(url) => url.value,
-        Err(_) => "https://plauzible.com".to_string()
-    };
-    let service_key = match database::get_setting(&mut pool, "service.key").await {
-        Ok(key) => key.value,
-        Err(_) => "".to_string()
-    };
-    let terms_accepted = match database::get_setting_or_default(&mut pool, "terms.accepted", "false").await {
-        Ok(accepted) => accepted.value,
-        Err(_) => "false".to_string()
-    };
-    let terms_remoted = match database::get_setting_or_default(&mut pool, "terms.remoted", "false").await {
-        Ok(remoted) => remoted.value,
-        Err(_) => "false".to_string()
-    };
+    let service_url = database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?.value;
+    let service_key = database::get_setting_or_default(&mut pool, "service.key", "").await?.value;
+    let terms_accepted = database::get_setting_or_default(&mut pool, "terms.accepted", "false").await?.value;
+    let terms_remoted = database::get_setting_or_default(&mut pool, "terms.remoted", "false").await?.value;
 
     if terms_accepted != "false" {
         timestamp = match terms_accepted.parse::<i64>() {
@@ -329,10 +325,7 @@ pub fn validate_salt(salt: &str) -> Result<String, String> {
 /// Validates a service key. This id done by dispatch a request to the
 /// configured service provider and ensuring that we get a successful
 /// response to the request.
-pub fn validate_service_key(service_key: &str) -> Result<(), String> {
-    if service_key.len() > 0 {
-        Err("Service key validation has not yet been implemented.".to_string())
-    } else {
-        Ok(())
-    }
+pub fn validate_service_key(_service_key: &str) -> Result<(), String> {
+    // TBD: Implement service key validation.
+    Ok(())
 }

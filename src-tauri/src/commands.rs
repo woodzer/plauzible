@@ -44,6 +44,7 @@ pub fn get_database_path() -> String {
 pub async fn get_application_settings() -> Result<String, String> {
     let settings = object! {
         operationMode: utilities::get_operation_mode().await?,
+        serviceURL: utilities::get_service_url().await?,
         termsAccepted: utilities::get_terms_accepted().await?,
         termsRemoted: utilities::get_terms_remoted().await?
     };
@@ -247,10 +248,7 @@ pub async fn store_record(password_hash_hex: String, record: String) -> Result<S
 #[tauri::command]
 pub async fn store_remote_record(password_hash: String, record: String) -> Result<String, String> {
     match rest_api::create_remote_record(&password_hash, &record).await {
-        Ok(output) => {
-            println!("OUTPUT: {}", output);
-            Ok(output)
-        },
+        Ok(output) =>  Ok(output),
         Err(error) => Err(error),
     }
 }

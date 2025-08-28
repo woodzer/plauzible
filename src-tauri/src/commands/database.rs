@@ -5,7 +5,6 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::str;
-
 use crate::commands::utilities::{self, get_application_data_directory, get_or_create_application_data_directory};
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
@@ -14,8 +13,7 @@ const CREATE_SETTING_SQL: &str = "insert into settings(key, value) values ($1, $
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
-const GET_ALL_NON_SENSITIVE_SETTINGS: &str =
-    "select id, key, value from settings where sensitive = 0";
+const GET_ALL_NON_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 0";
 const GET_ALL_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 1";
 const UPDATE_RECORD_SQL: &str = "update data_records set data = ? where id = ?";
 const UPDATE_SETTING_SQL: &str = "update settings set value = ? where key = ?";
@@ -25,7 +23,6 @@ pub struct DataRecord {
     pub id: i64,
     pub data: String,
 }
-
 #[derive(sqlx::FromRow)]
 pub struct SettingRecord {
     pub id: i64,
@@ -175,7 +172,12 @@ pub fn get_database_template_path() -> Result<PathBuf, String> {
         }
     };
 
+
     let mut path = current_dir.clone();
+    if path.ends_with("src-tauri") {
+        path.pop();
+    }
+    path.push("db");
     path.push("plauzible_template");
     path.set_extension("db");
 

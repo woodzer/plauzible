@@ -17,18 +17,15 @@ function hideSensitiveSettings(event) {
 }
 
 function loadSubscribePage() {
-    // return(invoke("open_url", {url: "https://plauzible.com/checkout"}));
-    return(invoke("open_url", {url: "https://872bf12edbde.ngrok-free.app/checkout"}));
+    return(invoke("open_url", {url: "https://plauzible.com/checkout"}));
 }
 
 function loadUnsubscribePage() {
     let key = localSettings["service.key"];
-    // return(invoke("open_url", {url: `https://plauzible.com/unsubscribe?key=${key}`}));
-    return(invoke("open_url", {url: `https://872bf12edbde.ngrok-free.app/unsubscribe?key=${key}`}));
+    return(invoke("open_url", {url: `https://plauzible.com/unsubscribe?key=${key}`}));
 }
 
 function initializeSettings() {
-    console.log("Initializing the settings user interface.");
     invoke("get_standard_settings")
         .then((json) => {
             let records = JSON.parse(json);
@@ -246,6 +243,5 @@ function validateEncryptionSettings(value) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    console.log("Settings starting...");
     initializeSettings();
 });

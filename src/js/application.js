@@ -345,11 +345,12 @@ function hideVisibleSection() {
 function initializeApplication() {
     invoke("get_application_settings")
         .then((data) => {
-            console.log("Application settings:", data);
             let object = JSON.parse(data);
             settings.mode = object.operationMode;
+            settings.serviceURL = object.serviceURL;
             settings.termsAccepted = object.termsAccepted;
             settings.termsRemoted = object.termsRemoted;
+            console.log("Application settings:", settings);
 
             setupPageHandlers();
             setupTermsOfService();
@@ -361,7 +362,7 @@ function initializeApplication() {
             showPasswordSection();
             setupDropdownSelects();
             setupRecordFilters();
-            runVersionCheck();
+            runVersionCheck(settings);
             touchTimeout();
         })
         .catch((error) => showError(`Failed to get application settings. Cause: ${error}`));
@@ -404,7 +405,7 @@ function onImportCompletionEvent(event) {
     let section = document.querySelector("#file_importer_progress");
 
     settings.records = report.result;
-    showSuccess("File record were imported successfully.");
+    showSuccess("File records were imported successfully.");
     if(section) {
         section.querySelector(".close-file-import").disabled = false;
     }
@@ -507,7 +508,7 @@ function onStartImport(event) {
                     .then((report) => {
                         settings.records = report.result;
                         populateRecordListTable();
-                        showSuccess("File record were imported successfully.");
+                        showSuccess("File records were imported successfully.");
                     });
             })
             .catch((error) => showError(`Failed to import the file. Cause: ${error}`));
@@ -679,17 +680,6 @@ function populateTagFilterList() {
     }
 }
 
-function requireTermsAcceptance(onAcceptance) {
-    let modal = document.querySelector("#terms_of_service_modal");
-    let eventListener = (event) => {
-        event.preventDefault();
-        modal.classList.remove("is-active");
-        onAcceptance();
-    };
-
-    modal.querySelector("button.submit-button").addEventListener("click", eventListener);
-}
-
 function resetForm(mode) {
     let section = document.querySelector("#record_form");
 
@@ -720,12 +710,10 @@ function resetForm(mode) {
     }
 }
 
-function runVersionCheck() {
-    fetchApplicationVersionDetails()
+function runVersionCheck(settings) {
+    fetchApplicationVersionDetails(settings)
         .then((data) => {
-            console.log("Version Data:", data);
             if(data.version !== CURRENT_VERSION) {
-                console.log("New version available:", data.version);
                 showInfo(`<p>A new version of the Plauzible client application is available <a href="${data.url}" target="_blank">here</a>.</p>`);
             }
         });
@@ -1328,6 +1316,5 @@ function verifyTermsAcceptance(onAcceptance) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    console.log("Application starting...");
     initializeApplication();
 });

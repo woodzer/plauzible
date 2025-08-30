@@ -76,11 +76,8 @@ function hideError() {
 }
 
 function initializeApplication() {
-    let salt = document.querySelector('input[name="salt"]').value;
-    let serviceKey = document.querySelector('input[name="service_key"]').value;
-
     showNextStep();
-    invoke("initialize_application", {salt: salt, serviceKey: serviceKey})
+    invoke("initialize_application", {salt: "", serviceKey: ""})
         .then((data) => {
             let json = JSON.parse(data);
 

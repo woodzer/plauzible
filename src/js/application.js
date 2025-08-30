@@ -343,15 +343,8 @@ function hideVisibleSection() {
 }
 
 function initializeApplication() {
-    invoke("get_application_settings")
-        .then((data) => {
-            let object = JSON.parse(data);
-            settings.mode = object.operationMode;
-            settings.serviceURL = object.serviceURL;
-            settings.termsAccepted = object.termsAccepted;
-            settings.termsRemoted = object.termsRemoted;
-            console.log("Application settings:", settings);
-
+    return(loadApplicationSettings()
+        .then((settings) => {
             setupPageHandlers();
             setupTermsOfService();
             setupPasswordHandling();
@@ -364,12 +357,25 @@ function initializeApplication() {
             setupRecordFilters();
             runVersionCheck(settings);
             touchTimeout();
+            return(settings);
         })
-        .catch((error) => showError(`Failed to get application settings. Cause: ${error}`));
+        .catch((error) => showError(`Failed to get application settings. Cause: ${error}`)));
 }
 
 function launchURL(url) {
     return(invoke("open_url", {url: url}));
+}
+
+function loadApplicationSettings() {
+    return(invoke("get_application_settings")
+        .then((data) => {
+            let object = JSON.parse(data);
+            settings.mode = object.operationMode;
+            settings.serviceURL = object.serviceURL;
+            settings.termsAccepted = object.termsAccepted;
+            settings.termsRemoted = object.termsRemoted;
+            return(settings);
+        }));
 }
 
 function onDeleteRecordConfirmed(event) {
@@ -516,7 +522,6 @@ function onStartImport(event) {
         showError("The import type requested is currently not supported.");
     }
 }
-
 
 function openPasswordGeneratorModal(event) {
     let modal = document.querySelector("#password_generator_modal");
@@ -678,6 +683,27 @@ function populateTagFilterList() {
             listControl.appendChild(entry);
         });
     }
+}
+
+function refreshRecordList() {
+    getVisibleSection()
+        .then((section) => {
+            if(section && section.id === "application_section") {
+                let promise = new Promise((resolve, _) => {
+                    resolve((new RecordAPI(settings, invoke)).getAll())
+                })
+                .then((records) => {
+                    settings.records = records;
+                    updateRecordTags();
+                    populateRecordListTable();
+                    populateTagFilterList();
+                    return(records);
+                });
+                return(promise);
+            } else {
+                return(new Promise((resolve, _) => resolve([])));
+            }
+        });
 }
 
 function resetForm(mode) {
@@ -885,6 +911,8 @@ function setupPageHandlers() {
 
             event.preventDefault();
             showSection(section);
+            loadApplicationSettings()
+                .then(() => refreshRecordList());
         });
     }
 }

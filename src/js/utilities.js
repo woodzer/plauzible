@@ -123,7 +123,7 @@ function uniqueAndSortStringList(array) {
         object[item] = true;
     });
 
-    return Object.keys(object).sort((a, b) => a.localeCompare(b, 'en', {'sensitivity': 'base'}));
+    return Object.keys(object).filter((entry) => entry.trim() !== "").sort((a, b) => a.localeCompare(b, 'en', {'sensitivity': 'base'}));
 }
 
 export {

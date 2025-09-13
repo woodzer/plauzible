@@ -1,11 +1,10 @@
 use json;
 use sqlx::sqlite::{Sqlite, SqliteConnectOptions, SqlitePool};
 use sqlx::{Pool, Row, Transaction};
-use std::env;
-use std::fs;
-use std::path::PathBuf;
 use std::str;
-use crate::commands::utilities::{self, get_application_data_directory, get_or_create_application_data_directory};
+use tauri::{AppHandle, Manager, path::BaseDirectory};
+use crate::commands::migrations::get_database_path;
+use crate::commands::utilities;
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
@@ -30,33 +29,6 @@ pub struct SettingRecord {
     pub value: String,
 }
 
-/// This function looks for the database template file in the current working
-/// directory and it's immediate parent. If it is found then it is copied to
-/// a file called 'plauzible.db' in the current working directory.
-pub fn create_database() -> Result<String, String> {
-    // Attempt to locate the database template file.
-    let template_path = get_database_template_path()?;
-    let mut target_path = get_or_create_application_data_directory()?;
-
-    target_path.push("plauzible");
-    target_path.set_extension("db");
-
-    if target_path.exists() {
-        return Err(format!(
-            "The '{}' database file already exists.",
-            target_path.display()
-        ));
-    }
-
-    match fs::copy(template_path, &target_path) {
-        Err(error) => Err(format!(
-            "Copy application database failed: Cause: {:?}",
-            error
-        )),
-        _ => Ok(format!("{}", target_path.display())),
-    }
-}
-
 /// Creates a new setting in the settings database table.
 pub async fn create_setting(pool: &mut Pool<Sqlite>, key: &str, value: &str) -> Result<(), String> {
     match sqlx::query(CREATE_SETTING_SQL)
@@ -72,11 +44,9 @@ pub async fn create_setting(pool: &mut Pool<Sqlite>, key: &str, value: &str) -> 
 
 /// Establishes a connection to the application database. Note that using this
 /// function, connection will fail if the database file does not exist.
-pub async fn connect_to_database() -> Result<Pool<Sqlite>, String> {
-    let database_path = match get_existing_database_path() {
-        Some(path) => path,
-        _ => return Err(String::from("Unable to locate the application database.")),
-    };
+pub async fn connect_to_database(handle: &AppHandle) -> Result<Pool<Sqlite>, String> {
+    // let database_path = match get_existing_database_path(handle) {
+    let database_path = get_database_path(handle).await?;
 
     let settings = SqliteConnectOptions::new()
         .filename(&database_path)
@@ -104,8 +74,8 @@ pub async fn count_total_records(pool: &mut Pool<Sqlite>) -> Result<i64, String>
 }
 
 /// Deletes a record from the data_records database table based on it's id.
-pub async fn delete_record_by_id(record_id: i64) -> Result<i64, String> {
-    let pool = connect_to_database().await?;
+pub async fn delete_record_by_id(handle: &AppHandle, record_id: i64) -> Result<i64, String> {
+    let pool = connect_to_database(handle).await?;
 
     match sqlx::query(DELETE_RECORD_SQL)
         .bind(record_id)
@@ -157,65 +127,20 @@ pub async fn get_all_standard_settings(
     Ok(records)
 }
 
-/// This function attempts to locate the application database template file
-/// by looking first in the current working directory and then in that
-/// directories parent.
-pub fn get_database_template_path() -> Result<PathBuf, String> {
-    // Attempt to locate the database template file.
-    let current_dir = match env::current_dir() {
-        Ok(path_buffer) => path_buffer,
-        Err(error) => {
-            return Err(format!(
-                "Failed to identify the current working directory. Cause: {:?}",
-                error
-            ))
-        }
-    };
-
-
-    let mut path = current_dir.clone();
-    if path.ends_with("src-tauri") {
-        path.pop();
-    }
-    path.push("db");
-    path.push("plauzible_template");
-    path.set_extension("db");
-
-    if !path.exists() || !path.is_file() {
-        let mut copy = current_dir.clone();
-        if copy.pop() {
-            path = copy;
-            path.push("plauzible_template");
-            path.set_extension("db");
-        }
-    }
-
-    if !path.exists() || !path.is_file() {
-        Err("Unable to locate the database template file.".to_string())
-    } else {
-        Ok(path)
-    }
-}
-
 /// This function attempts to locate the application database file in the
 /// current working directory. If it is not found then None is returned.
-pub fn get_existing_database_path() -> Option<String> {
-    // Attempt to locate the database template file.
-    let mut path = match get_application_data_directory() {
-        Ok(path) => path,
-        Err(_) => return None,
-    };
-
-    path.push("plauzible");
-    path.set_extension("db");
-    Some(format!("{}", path.display()))
+pub fn get_existing_database_path(handle: &AppHandle) -> Option<String> {
+    match handle.path().resolve("plauzible/plauzible.db", BaseDirectory::Data) {
+        Ok(path) => Some(path.into_os_string().into_string().unwrap()),
+        Err(_) => None
+    }
 }
 
 /// Fetches a list of all of the records from the local database that can be
 /// decrypted with a given password hash. The results are returned as a string
 /// of JSON.
-pub async fn get_local_records(password_hash: &str) -> Result<String, String> {
-    let mut pool = connect_to_database().await?;
+pub async fn get_local_records(handle: &AppHandle, password_hash: &str) -> Result<String, String> {
+    let mut pool = connect_to_database(handle).await?;
 
     let records: Vec<DataRecord> = match sqlx::query_as(FETCH_RECORD_SQL).fetch_all(&pool).await {
         Ok(list) => list,
@@ -332,20 +257,6 @@ pub async fn get_setting_or_default(pool: &mut Pool<Sqlite>, name: &str, default
     match get_setting(pool, name).await {
         Ok(record) => Ok(record),
         Err(_) => Ok(default_value),
-    }
-}
-
-/// Remove the existing database (if it exists).
-pub fn remove_existing_database() -> Result<(), String> {
-    match get_existing_database_path() {
-        Some(path) => match fs::remove_file(path) {
-            Ok(_) => Ok(()),
-            Err(error) => Err(format!(
-                "Failed to remove existing database file. Cause: {:?}",
-                error
-            )),
-        },
-        _ => Ok(()),
     }
 }
 

@@ -1,6 +1,7 @@
 use json;
 use uuid::Uuid;
 use reqwest;
+use tauri::AppHandle;
 use crate::commands::database;
 use crate::commands::utilities;
 
@@ -12,8 +13,8 @@ struct ServiceSettings {
 }
 
 
-pub async fn create_remote_record(password_hash: &str, record: &str) -> Result<String, String> {
-    let service_settings = get_service_settings().await?;
+pub async fn create_remote_record(handle: &AppHandle, password_hash: &str, record: &str) -> Result<String, String> {
+    let service_settings = get_service_settings(handle).await?;
     let mut json = match json::parse(&record) {
         Ok(value) => value,
         Err(error) => {
@@ -97,8 +98,8 @@ pub async fn create_remote_record(password_hash: &str, record: &str) -> Result<S
 
 
 /// Deletes a record in the remote service.
-pub async fn delete_remote_record(password_hash: &str, record_json: &str, record_id: i64) -> Result<i64, String> {
-    let settings = get_service_settings().await?;
+pub async fn delete_remote_record(handle: &AppHandle, password_hash: &str, record_json: &str, record_id: i64) -> Result<i64, String> {
+    let settings = get_service_settings(handle).await?;
     let json = match json::parse(&record_json) {
         Ok(value) => value,
         Err(error) => {
@@ -156,8 +157,8 @@ pub async fn delete_remote_record(password_hash: &str, record_json: &str, record
 
 /// Retrieves a collection of records from the remote service for the current
 /// session key.
-pub async fn get_remote_records(password_hash: &str) -> Result<String, String> {
-    let settings = get_service_settings().await?;
+pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Result<String, String> {
+    let settings = get_service_settings(handle).await?;
     let session_key = get_session_key(password_hash, &settings.salt)?;
     let client = reqwest::Client::new();
     let url = format!("{}/api/records/{}", settings.url, session_key);
@@ -242,8 +243,8 @@ pub async fn get_remote_records(password_hash: &str) -> Result<String, String> {
 
 /// Retrieves a collection of the various settings from the application database
 /// that will be need to interact with the remote service.
-async fn get_service_settings() -> Result<ServiceSettings, String> {
-    let mut pool = database::connect_to_database().await?;
+async fn get_service_settings(handle: &AppHandle) -> Result<ServiceSettings, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let nonce = database::get_setting(&mut pool, "encryption.nonce").await?;
     let service_key = database::get_setting(&mut pool, "service.key").await?;
     let service_url = database::get_setting(&mut pool, "service.url").await?;
@@ -266,8 +267,8 @@ pub fn get_session_key(password_hash: &str, salt: &str) -> Result<String, String
 }
 
 /// Updates a record in the remote service.
-pub async fn update_remote_record(password_hash: &str, record_id: i64, record_json: &str) -> Result<String, String> {
-    let settings = get_service_settings().await?;
+pub async fn update_remote_record(handle: &AppHandle, password_hash: &str, record_id: i64, record_json: &str) -> Result<String, String> {
+    let settings = get_service_settings(handle).await?;
     let json = match json::parse(&record_json) {
         Ok(value) => value,
         Err(error) => {

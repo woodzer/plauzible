@@ -4,40 +4,16 @@ use aes_gcm::{
     Aes256Gcm, Key, KeyInit, Nonce,
 };
 use argon2::{password_hash::SaltString, Argon2};
-use directories::{ProjectDirs};
-use std::fs::{create_dir_all};
-use std::path::PathBuf;
 use hex;
 use rand::prelude::*;
 use std::str;
+use tauri::AppHandle;
 use crate::commands::database;
 
 pub struct FakeRecord {
     pub data: String,
     pub nonce: String,
     pub salt: String,
-}
-
-/// This function generates a PathBuf representing the application data directory.
-pub fn get_application_data_directory() -> Result<PathBuf, String> {
-    let project_dirs = ProjectDirs::from("com.plauzible", "plauzible", "plauzible").unwrap();
-    let data_dir = project_dirs.data_dir();
-    Ok(data_dir.to_path_buf())
-}
-
-/// This function generates a PathBuf representing the application data directory.
-/// If the directory does not exist then an attempt is made to create it.
-pub fn get_or_create_application_data_directory() -> Result<PathBuf, String> {
-    let data_dir = get_application_data_directory()?;
-
-    if !data_dir.exists() {
-        match create_dir_all(&data_dir) {
-            Err(error) => Err(format!("Failed to create application data directory. Cause: {:?}", error)),
-            _ => Ok(data_dir.to_path_buf())
-        }
-    } else {
-        Ok(data_dir.to_path_buf())
-    }
 }
 
 /// Takes the application salt, nonce and user password and attempts to
@@ -209,8 +185,8 @@ fn generate_salt() -> String {
 /// key setting is present in the database. Returns a Result. On success the
 /// success the result will contain a String indicating the operation mode.
 /// The operation mode can be either "local" or "remote".
-pub async fn get_operation_mode() -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
+pub async fn get_operation_mode(handle: &AppHandle) -> Result<String, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let setting = database::get_setting(&mut pool, "service.key").await?;
     match setting.value.trim() {
         "" => Ok("local".to_string()),
@@ -220,8 +196,8 @@ pub async fn get_operation_mode() -> Result<String, String> {
 
 /// Returns the URL of the remote service. Returns a Result. On success the
 /// result will contain a string value that will be the URL of the remote service.
-pub async fn get_service_url() -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
+pub async fn get_service_url(handle: &AppHandle) -> Result<String, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let setting = database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?;
     Ok(setting.value)
 }
@@ -230,8 +206,8 @@ pub async fn get_service_url() -> Result<String, String> {
 /// accepted by the user. Returns a Result. On success the result will contain
 /// a string value that will be either "true" or "false" to indicate whether the
 /// terms have been accepted.
-pub async fn get_terms_accepted() -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
+pub async fn get_terms_accepted(handle: &AppHandle) -> Result<String, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let setting = database::get_setting_or_default(&mut pool, "terms.accepted", "false").await?;
     Ok(setting.value)
 }
@@ -240,8 +216,8 @@ pub async fn get_terms_accepted() -> Result<String, String> {
 /// dispatched and recorded on the remote service. Returns a Result. On success
 /// the result will contain a string value that will be either "true" or "false"
 /// to indicate whether the terms have been accepted.
-pub async fn get_terms_remoted() -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
+pub async fn get_terms_remoted(handle: &AppHandle) -> Result<String, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let setting = database::get_setting_or_default(&mut pool, "terms.remoted", "false").await?;
     Ok(setting.value)
 }
@@ -250,8 +226,8 @@ pub async fn get_terms_remoted() -> Result<String, String> {
 /// with the remote service. On success the result will contain a string value
 /// that will be either "true" or "false" to indicate whether the terms have
 /// been accepted.
-pub async fn record_terms_accepted() -> Result<String, String> {
-    let mut pool = database::connect_to_database().await?;
+pub async fn record_terms_accepted(handle: &AppHandle) -> Result<String, String> {
+    let mut pool = database::connect_to_database(handle).await?;
     let client = reqwest::Client::new();
     let mut timestamp = chrono::Utc::now().timestamp();
     let data = object! {
@@ -301,6 +277,15 @@ pub async fn record_terms_accepted() -> Result<String, String> {
     }
 }
 
+pub fn shuffle_vec<T>(vec: &Vec<T>) -> Vec<T>
+    where T: Clone {
+    let mut rng = rand::rng();
+    let mut copy = vec.clone();
+
+    copy.shuffle(&mut rng);
+    copy
+}
+
 /// Validates a string containing a salt value. Salt values must be 44 characters
 /// long and be a valid hexidecimal value.
 pub fn validate_salt(salt: &str) -> Result<String, String> {
@@ -325,7 +310,7 @@ pub fn validate_salt(salt: &str) -> Result<String, String> {
 /// Validates a service key. This id done by dispatch a request to the
 /// configured service provider and ensuring that we get a successful
 /// response to the request.
-pub fn validate_service_key(_service_key: &str) -> Result<(), String> {
+pub fn _validate_service_key(_service_key: &str) -> Result<(), String> {
     // TBD: Implement service key validation.
     Ok(())
 }

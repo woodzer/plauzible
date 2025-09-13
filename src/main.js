@@ -1,5 +1,7 @@
 const { invoke } = window.__TAURI__.core;
 const Database = window.__TAURI__.sql;
+const FS = window.__TAURI__.fs;
+const Path = window.__TAURI__.path;
 
 const NONCE_KEY = "encryption.nonce";
 const SALT_KEY = "encryption.salt";
@@ -75,15 +77,20 @@ function hideError() {
     }
 }
 
+async function copyTemplateDatabase(fromPath, toName) {
+    await FS.copyFile("plauzible_template.db", toName, {fromPathBaseDir: FS.BaseDirectory.Resources, toPathBaseDir: FS.BaseDirectory.Data});
+}
+
 function initializeApplication() {
     showNextStep();
-    invoke("initialize_application", {salt: "", serviceKey: ""})
+    invoke("initialize_application", {salt: ""})
         .then((data) => {
             let json = JSON.parse(data);
 
             addBaseSettings(json);
         })
         .catch((error) => {
+            console.error(error);
             showError(error);
         });
 }

@@ -13,6 +13,18 @@
     "clipboard-manager:allow-clear",
     "clipboard-manager:allow-write-text",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "fs:allow-appconfig-read-recursive",
+    "fs:allow-appconfig-write-recursive",
+    "fs:allow-appconfig-meta-recursive",
+    {"identifier": "fs:allow-resource-read-recursive", "allow": [{"path": "$RESOURCE/**/*"}]},
+    {"identifier": "fs:allow-resource-meta-recursive", "allow": [{"path": "$RESOURCE/**/*"}]},
+    {"identifier": "fs:allow-resource-read", "allow": [{"path": "$RESOURCE/**/*"}]},
+    {"identifier": "fs:allow-app-read-recursive", "allow": [{"path": "$HOME/**/*"}]},
+    {"identifier": "fs:allow-app-write-recursive", "allow": [{"path": "$HOME/**/*"}]},
+    {"identifier": "fs:allow-app-meta-recursive", "allow": [{"path": "$HOME/**/*"}]},
+    {"identifier": "fs:allow-app-read-recursive", "allow": [{"path": "$APPDATA/**/*"}]},
+    {"identifier": "fs:allow-app-write-recursive", "allow": [{"path": "$APPDATA/**/*"}]},
+    {"identifier": "fs:allow-app-meta-recursive", "allow": [{"path": "$APPDATA/**/*"}]}
   ]
 }

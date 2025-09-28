@@ -6,9 +6,10 @@ const Path = window.__TAURI__.path;
 const NONCE_KEY = "encryption.nonce";
 const SALT_KEY = "encryption.salt";
 const SERVICE_KEY_KEY = "service.key";
+const SERVICE_URL_KEY = "service.url";
 const PASSWORD_LENGTH_KEY = "password.length";
 const PASSWORD_CHARACTER_SET_KEY = "password.character_set";
-const ALL_KEYS = [NONCE_KEY, PASSWORD_LENGTH_KEY, PASSWORD_CHARACTER_SET_KEY, SALT_KEY, SERVICE_KEY_KEY];
+const DEFAULT_SERVICE_URL = "https://www.plauzible.com";
 
 import { DEFAULT_CHARACTER_SET, DEFAULT_PASSWORD_LENGTH } from "./js/utilities.js";
 
@@ -31,6 +32,9 @@ function addBaseSettings(settings) {
         })
         .then(() => {
             return connection.execute(INSERT_CONFIGURATION_SQL, [SERVICE_KEY_KEY, settings.serviceKey, 0]);
+        })
+        .then(() => {
+            return connection.execute(INSERT_CONFIGURATION_SQL, [SERVICE_URL_KEY, DEFAULT_SERVICE_URL, 0]);
         })
         .then(() => {
             return connection.execute(INSERT_CONFIGURATION_SQL, [PASSWORD_LENGTH_KEY, `${DEFAULT_PASSWORD_LENGTH}`, 0]);

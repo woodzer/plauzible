@@ -14,10 +14,571 @@
     <script src="/js/fontawesome-5.9.0.min.js" defer></script>
     <script src="/js/simple_notify-1.0.5.min.js" defer></script>
     <script type="module" src="/js/application.js" defer></script>
+    <script type="module" src="/js/components/view-switcher.js" defer></script>
+    <script type="module" src="/js/components/dropdown-menu.js" defer></script>
+    <script type="module" src="/js/components/vertical-list.js" defer></script>
+    <script type="module" src="/js/components/record-list-item.js" defer></script>
+    <script type="module" src="/js/components/record-form.js" defer></script>
+    <script type="module" src="/js/components/toolbar.js" defer></script>
+    <script type="module" src="/js/components/log-in-view.js" defer></script>
+    <script type="module" src="/js/components/settings-view.js" defer></script>
+    <script type="module" src="/js/components/application-view.js" defer></script>
 </head>
 
 <body>
-    <div class="container height-100pct">
+    <view-switcher>
+        <log-in-view name="log-in" slot="view">
+            <div class="container" slot="content">
+                <span class="mt-2 top-right-button">
+                    <a class="button-link settings-button" href="#" title="Settings">
+                        <span class="icon">
+                            <i class="fa-lg fas fa-cog"></i>
+                        </span>
+                    </a>
+                </span>
+
+                <div class="columns">
+                    <div class="column is-10 is-offset-1">
+                        <div class="card" id="password_card">
+                            <header class="card-header">
+                                <p class="card-header-title">Session Password</p>
+                            </header>
+
+                            <div class="card-content">
+                                <p class="content has-text-justified">
+                                    Enter a password in the field below to start a new session. All passwords
+                                    are valid to Plauzible but only the password that was used to create an
+                                    entry can be used to view it later.
+                                </p>
+
+                                <div class="field mr-5">
+                                    <label class="label">Password</label>
+                                    <div class="component">
+                                        <input class="input is-normal" name="sessionPassword" placeholder="Enter a session password" type="password"/>
+                                    </div>
+                                    <p class="help is-danger is-hidden">
+                                        A password must be provided and must be a minimum of 10 characters in length.
+                                    </p>
+                                </div>
+
+                                <div class="mr-2 mt-5 pb-3">
+                                    <div class="buttons has-clearfix is-pulled-right">
+                                        <button class="button is-success" id="submit_password_button">Submit</button>
+                                    </div>
+                                </div>
+
+                                <p class="content has-text-grey-light has-text-justified is-size-7 mt-6">
+                                    <strong>Note:</strong> To maximize security you should avoid using common or
+                                    obvious passwords and make any passwords you choose to use as long as possible.
+                                    Plauzible requires session passwords to be a minimum of 10 characters in length.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <!-- Terms of Service Modal -->
+                <div class="modal terms-of-service-modal">
+                    <div class="modal-background"></div>
+                    <div class="modal-card">
+                        <header class="modal-card-head">
+                            <p class="modal-card-title">Terms of Service</p>
+                            <button class="delete cancel-modal"></button>
+                        </header>
+
+                        <section class="modal-card-body">
+                            <p class="content has-text-justified">
+                                Before you can use Plauzible you must accept the terms of service.
+                                You can review the terms of service
+                                <a href="https://plauzible.com/terms" target="_blank">here</a> and
+                                the associated privacy policy
+                                <a href="https://plauzible.com/privacy" target="_blank">here</a>.
+                                Click on the checkbox below to accept the terms of service.
+                            </p>
+
+                            <p>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="termsAccepted">
+                                    I accept the terms of service.
+                                </label>
+                            </p>
+                        </section>
+
+                        <footer class="modal-card-foot">
+                            <div class="buttons">
+                                <button class="button is-success submit-button" disabled>Accept</button>
+                                <button class="button cancel-modal">Cancel</button>
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </log-in-view>
+
+        <settings-view name="settings" slot="view">
+            <div class="container" slot="content">
+                <section>
+                    <span class="is-float-right">
+                        <span class="close-view-button icon is-clickable is-size-4">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </span>
+                    <h1 class="is-3 mb-3 mt-3 title">Settings</h1>
+                    <hr>
+                </section>
+
+                <section class="loading-section">
+                    <center class="mt-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" overflow="visible" fill="#b60524" stroke="none">
+                            <defs>
+                                <polygon id="loader" points="20,40 28,55 12,55" />
+                            </defs>
+                            <use xlink:href="#loader" transform="rotate(45 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.13s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(90 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.25s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(135 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.38s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(180 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.50s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(225 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.63s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(270 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.75s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(315 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="0.88s" repeatCount="indefinite"></animate>
+                            </use>
+                            <use xlink:href="#loader" transform="rotate(360 50 50)">
+                                <animate attributeName="opacity" values="0;1;0" dur="1s" begin="1.00s" repeatCount="indefinite"></animate>
+                            </use>
+                        </svg>
+                    </center>
+                </section>
+    
+                <div class="pb-6 pb-6 settings-panel">
+                    <!-- Remote Service Settings -->
+                    <section class="mb-6 mr-6 remote-service-settings">
+                        <h2 class="is-5 title">Remote Service Settings</h2>
+                        <p class="content has-text-justified">
+                            These settings relate to the online Plauzible storage service.
+                            If you are using the online service you can enter your service
+                            key and URL in the fields below.
+                        </p>
+        
+                        <div class="field">
+                            <label class="label">Service Key</label>
+                            <div class="control">
+                                <input class="input" name="serviceKey" placeholder="Enter a valid remote service key" type="password">
+                            </div>
+                        </div>
+        
+                        <div class="field">
+                            <label class="label">Service Provider URL</label>
+                            <div class="control">
+                                <input class="input" name="serviceURL" placeholder="Enter the base remote service URL" type="url" value="https://www.plauzible.com">
+                            </div>
+                        </div>
+        
+                        <div class="buttons is-pulled-right mt-3">
+                            <button class="button create-subscription is-success">Subscribe</button>
+                            <button class="button end-subscription is-danger">Cancel Subscription</button>
+                            <button class="button update-service-settings">Update</button>
+                        </div>
+                    </section>
+                    <br>
+
+                    <!-- Password Generator Settings -->
+                    <section class="mb-6 mt-6 mr-6 password-generator-settings">
+                        <h2 class="is-5 title">Password Generator Settings</h2>
+                        <p class="content has-text-justified">
+                            These settings relate to the password generation process.
+                        </p>
+        
+                        <div class="field">
+                            <label class="label">Password Length</label>
+                            <div class="control">
+                                <input class="input" min="10" name="passwordLength" placeholder="Enter the length of the generated passwords" type="number" value="12">
+                            </div>
+                        </div>
+        
+                        <div class="field">
+                            <label class="label">Default Character Set</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select name="defaultCharacterSet">
+                                        <option value="alphanumeric_lower">Alphanumeric (Lower Case)</option>
+                                        <option value="alphanumeric_upper">Alphanumeric (Upper Case)</option>
+                                        <option value="alphanumeric_mixed">Alphanumeric (Mixed Case)</option>
+                                        <option value="alphanumeric_mixed_symbols">Alphanumeric + Symbols (Mixed Case)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="buttons is-pulled-right mt-3">
+                            <button class="button update-password-generator-settings">Update</button>
+                        </div>
+                    </section>
+                    <br>
+
+                    <!-- Encryption Settings -->
+                    <section class="mb-5 mr-6">
+                        <h2 class="is-5 title">Encryption Settings</h2>
+                        <p class="content has-text-justified">
+                            Your encryption settings contain details for parameters used to
+                            encrypt your records. This is sensitive information and should
+                            not be shared with anyone. If you wish to use Plauzible on more
+                            then one machine then you can must copy these details between
+                            the machines manually.
+                        </p>
+        
+                        <div class="is-hidden" id="encryption_settings_details">
+                            <article class="message is-danger">
+                                <div class="message-body">
+                                    <p class="content has-text-justified">
+                                        <strong>Warning:</strong> Your encryption settings impact
+                                        how your records are encrypted. If you change these
+                                        settings then you will lose access to the records you
+                                        previously created on this machine! If you have not yet
+                                        created any records then you can safely change these
+                                        settings.
+                                    </p>
+                                </div>
+                            </article>
+            
+                            <div class="field">
+                                <div class="control">
+                                    <input class="input" name="encryptionSettings" type="text">
+                                </div>
+                            </div>
+        
+                            <div class="buttons is-pulled-right mt-3">
+                                <button class="button update-encryption-settings">Update</button>
+                                <button class="button hide-settings">Hide Settings</button>
+                            </div>
+                        </div>
+        
+                        <div class="buttons is-pulled-right" id="encryption_settings_reveal">
+                            <button class="button is-danger reveal-settings">Reveal Settings</button>
+                        </div>
+                    </section>
+                    <br>
+                </div>
+            </div>
+        </settings-view>
+
+        <application-view name="application" slot="view">
+            <tool-bar name="header_toolbar" slot="header_toolbar">
+                <button action="records.create" class="button is-large" slot="tool">
+                    <span class="icon">
+                        <!-- License: PD. Made by zurb: https://github.com/zurb/foundation-icon-fonts -->
+                        <svg fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+                        width="24px" height="24px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+                            <path d="M84.437,39.721l-24.164,0l0-24.158c0-1.001-0.812-1.812-1.812-1.813L41.536,13.75c-1.001,0-1.812,0.812-1.812,1.813
+                            l-0.001,24.16l-24.159-0.001c-0.961,0-1.812,0.851-1.813,1.813l0,16.925c-0.001,0.481,0.191,0.943,0.531,1.282
+                            c0.339,0.339,0.801,0.531,1.282,0.53h24.16v24.165c0,0.48,0.191,0.942,0.531,1.282c0.34,0.34,0.802,0.531,1.282,0.531L58.46,86.25
+                            c0.48,0,0.943-0.192,1.284-0.533c0.338-0.338,0.529-0.8,0.529-1.28V60.273l24.163-0.001c0.5,0,0.953-0.202,1.282-0.53
+                            c0.329-0.329,0.531-0.782,0.531-1.283l0.001-16.925C86.25,40.533,85.439,39.722,84.437,39.721z"/>
+                        </svg>
+                    </span>
+                </button>
+
+                <button action="records.filters.open" class="button is-large" slot="tool">
+                    <span class="icon">
+                        <!-- License: MIT. Made by michaelampr: https://github.com/michaelampr/jam -->
+                        <svg fill="#000000" width="23px" height="24px" viewBox="-2 -2 24 24" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin" class="jam jam-filter"><path d='M2.08 2l6.482 8.101A2 2 0 0 1 9 11.351V18l2-1.5v-5.15a2 2 0 0 1 .438-1.249L17.92 2H2.081zm0-2h15.84a2 2 0 0 1 1.561 3.25L13 11.35v5.15a2 2 0 0 1-.8 1.6l-2 1.5A2 2 0 0 1 7 18v-6.65L.519 3.25A2 2 0 0 1 2.08 0z'/></svg>
+                    </span>
+                </button>
+
+                <button action="records.file.import" class="button is-large" slot="tool">
+                    <span class="icon">
+                        <!-- License: PD. Made by Aleksey Popov: https://dribbble.com/AlekseyPopov -->
+                        <svg fill="#000000" width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M15,3.41421356 L15,7 L18.5857864,7 L15,3.41421356 Z M19,9 L15,9 C13.8954305,9 13,8.1045695 13,7 L13,3 L5,3 L5,21 L19,21 L19,9 Z M5,1 L15.4142136,1 L21,6.58578644 L21,21 C21,22.1045695 20.1045695,23 19,23 L5,23 C3.8954305,23 3,22.1045695 3,21 L3,3 C3,1.8954305 3.8954305,1 5,1 Z M13,13.4142136 L13,18 L11,18 L11,13.4142136 L9.70710678,14.7071068 L8.29289322,13.2928932 L12,9.58578644 L15.7071068,13.2928932 L14.2928932,14.7071068 L13,13.4142136 Z"/>
+                        </svg>
+                    </span>
+                </button>
+
+                <button action="settings.open" class="button is-large" slot="tool">
+                    <span class="icon">
+                        <!-- License: MIT. Made by jaynewey: https://github.com/jaynewey/charm-icons -->
+                        <svg width="24px" height="24px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" version="1.1" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                            <circle cx="8" cy="8" r="1.75"/>
+                            <path d="m6.75 1.75-.5 1.5-1.5 1-2-.5-1 2 1.5 1.5v1.5l-1.5 1.5 1 2 2-.5 1.5 1 .5 1.5h2.5l.5-1.5 1.5-1 2 .5 1-2-1.5-1.5v-1.5l1.5-1.5-1-2-2 .5-1.5-1-.5-1.5z"/>
+                        </svg>
+                    </span>
+                </button>
+
+                <button action="session.logout" class="button is-large" slot="tool">
+                    <span class="icon">
+                        <!-- License: GPL. Made by UXWB: https://github.com/uxwb/icons -->
+                        <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <title>entrance_fill</title>
+                            <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                <g id="System" transform="translate(-672.000000, -144.000000)" fill-rule="nonzero">
+                                    <g id="entrance_fill" transform="translate(672.000000, 144.000000)">
+                                        <path d="M24,0 L24,24 L0,24 L0,0 L24,0 Z M12.5934901,23.257841 L12.5819402,23.2595131 L12.5108777,23.2950439 L12.4918791,23.2987469 L12.4918791,23.2987469 L12.4767152,23.2950439 L12.4056548,23.2595131 C12.3958229,23.2563662 12.3870493,23.2590235 12.3821421,23.2649074 L12.3780323,23.275831 L12.360941,23.7031097 L12.3658947,23.7234994 L12.3769048,23.7357139 L12.4804777,23.8096931 L12.4953491,23.8136134 L12.4953491,23.8136134 L12.5071152,23.8096931 L12.6106902,23.7357139 L12.6232938,23.7196733 L12.6232938,23.7196733 L12.6266527,23.7031097 L12.609561,23.275831 C12.6075724,23.2657013 12.6010112,23.2592993 12.5934901,23.257841 L12.5934901,23.257841 Z M12.8583906,23.1452862 L12.8445485,23.1473072 L12.6598443,23.2396597 L12.6498822,23.2499052 L12.6498822,23.2499052 L12.6471943,23.2611114 L12.6650943,23.6906389 L12.6699349,23.7034178 L12.6699349,23.7034178 L12.678386,23.7104931 L12.8793402,23.8032389 C12.8914285,23.8068999 12.9022333,23.8029875 12.9078286,23.7952264 L12.9118235,23.7811639 L12.8776777,23.1665331 C12.8752882,23.1545897 12.8674102,23.1470016 12.8583906,23.1452862 L12.8583906,23.1452862 Z M12.1430473,23.1473072 C12.1332178,23.1423925 12.1221763,23.1452606 12.1156365,23.1525954 L12.1099173,23.1665331 L12.0757714,23.7811639 C12.0751323,23.7926639 12.0828099,23.8018602 12.0926481,23.8045676 L12.108256,23.8032389 L12.3092106,23.7104931 L12.3186497,23.7024347 L12.3186497,23.7024347 L12.3225043,23.6906389 L12.340401,23.2611114 L12.337245,23.2485176 L12.337245,23.2485176 L12.3277531,23.2396597 L12.1430473,23.1473072 Z" id="MingCute" fill-rule="nonzero"></path>
+                                        <path d="M12,2.5 C12.8284,2.5 13.5,3.17157 13.5,4 C13.5,4.82843 12.8284,5.5 12,5.5 L12,5.5 L7,5.5 C6.72386,5.5 6.5,5.72386 6.5,6 L6.5,6 L6.5,18 C6.5,18.2761 6.72386,18.5 7,18.5 L7,18.5 L11.5,18.5 C12.3284,18.5 13,19.1716 13,20 C13,20.8284 12.3284,21.5 11.5,21.5 L11.5,21.5 L7,21.5 C5.067,21.5 3.5,19.933 3.5,18 L3.5,18 L3.5,6 C3.5,4.067 5.067,2.5 7,2.5 L7,2.5 Z M18.0606,8.11091 L20.889,10.9393 C21.4748,11.5251 21.4748,12.4749 20.889,13.0607 L18.0606,15.8891 C17.4748,16.4749 16.5251,16.4749 15.9393,15.8891 C15.3535,15.3033 15.3535,14.3536 15.9393,13.7678 L16.207,13.5 L12,13.5 C11.1716,13.5 10.5,12.8284 10.5,12 C10.5,11.1716 11.1716,10.5 12,10.5 L16.207,10.5 L15.9393,10.2322 C15.3535,9.64645 15.3535,8.6967 15.9393,8.11091 C16.5251,7.52513 17.4748,7.52513 18.0606,8.11091 Z" id="形状结合" fill="#09244B"></path>
+                                    </g>
+                                </g>
+                            </g>
+                        </svg>
+                    </span>
+                </button>
+            </tool-bar>
+
+            <vertical-list name="record_list" slot="content"></vertical-list>
+
+            <div class="modal" id="delete_confirmation_modal" slot="modal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Confirm Delete</p>
+                        <button class="delete cancel-modal"></button>
+                    </header>
+    
+                    <section class="modal-card-body">
+                        <p class="content has-text-justified">
+                            Deleted records are permanently removed and cannot be recovered. Are you sure you want to delete this record?
+                        </p>
+                    </section>
+    
+                    <footer class="modal-card-foot">
+                        <div class="buttons">
+                            <button class="button is-danger submit-button">Continue</button>
+                            <button class="button cancel-modal">Cancel</button>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+    
+        </application-view>
+
+        <record-form name="record_form" slot="view">
+            <div slot="form">
+                <h2 class="is-4 mt-5 title"><span class="create-title">New</span><span class="is-hidden update-title">Update</span> Record</h2>
+    
+                <input name="id" type="hidden">
+
+                <div class="field-container mb-4">
+                    <div class="field">
+                        <label class="label is-size-5">Name</label>
+                        <div class="control">
+                            <input class="input is-medium" name="name" placeholder="Enter a name for the record" type="text" validated/>
+                        </div>
+                    </div>
+                    <p class="help is-danger is-hidden">
+                        You must enter a unique name for your record.
+                    </p>
+                </div>
+
+                <div class="field-container mb-4">
+                    <label class="label is-size-5">User Name</label>
+                    <div class="field has-addons">
+                    
+                        <div class="control is-expanded">
+                            <input class="input is-medium" name="userName" placeholder="Enter a user name for the record" type="text"/>
+                        </div>
+                        <div class="control">
+                            <button class="button is-medium copy-user-name uses-record-id" title="Copy user name">
+                                <span class="icon">
+                                    <i class="far fa-clone"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-container mb-4">
+                    <label class="label is-size-5">Password</label>
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input is-medium" name="password" placeholder="Enter the password for the record" type="password" validated/>
+                            <input class="input" name="passwordCopy" type="hidden"/>
+                        </div>
+                        <div class="control">
+                            <button class="button is-medium open-password-generator uses-record-id" title="Generate password">
+                                <span class="icon">
+                                    <!-- <i class="fas fa-redo-alt"></i> -->
+                                    <!-- License: MIT. Made by Sanity.io: https://github.com/sanity-io/icons -->
+                                    <svg width="24px" height="24px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                        <title>ionicons-v5-h</title>
+                                        <path d="M469.54,120.52h0a16,16,0,0,0-25.54-4L382.56,178a16.12,16.12,0,0,1-22.63,0L333.37,151.4a16,16,0,0,1,0-22.63l61.18-61.19a16,16,0,0,0-4.78-25.92h0C343.56,21,285.88,31.78,249.51,67.88c-30.9,30.68-40.11,78.62-25.25,131.53a15.89,15.89,0,0,1-4.49,16L53.29,367.46a64.17,64.17,0,1,0,90.6,90.64L297.57,291.25a15.9,15.9,0,0,1,15.77-4.57,179.3,179.3,0,0,0,46.22,6.37c33.4,0,62.71-10.81,83.85-31.64C482.56,222.84,488.53,157.42,469.54,120.52ZM99.48,447.15a32,32,0,1,1,28.34-28.35A32,32,0,0,1,99.48,447.15Z"/>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="control">
+                            <button class="button is-medium copy-password uses-record-id" title="Copy password">
+                                <span class="icon">
+                                    <i class="far fa-clone"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="help is-danger is-hidden">
+                        You must enter a password for your record.
+                    </p>
+                </div>
+
+                <div class="field-container mb-4">
+                    <label class="label is-size-5">Site URL</label>
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input is-medium" name="url" placeholder="Enter an URL for the site associated with this record" type="url" validated/>
+                        </div>
+                        <div class="control">
+                            <button class="button is-medium open-url-link uses-record-id" title="Launch">
+                                <span class="icon">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="help is-danger is-hidden">
+                        You must enter a valid URL.
+                    </p>
+                </div>
+
+                <div class="field-container mb-4">
+                    <div class="field">
+                        <label class="label is-size-5">Tags</label>
+                        <div class="control">
+                            <input class="input is-medium is-clickable" name="tags" placeholder="Enter tags for the record" readonly type="text"/>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="field-container mb-4">
+                    <div class="field">
+                        <label class="label is-size-5">Notes</label>
+                        <div class="control">
+                            <textarea class="textarea is-medium" name="notes" placeholder="Enter notes for the record"></textarea>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="buttons is-pulled-right mt-3">
+                    <button class="button is-success submit-button submit-record-create">Create</button>
+                    <button class="button is-hidden is-success submit-button submit-record-update">Update</button>
+                    <button class="button cancel-record-form">Cancel</button>
+                </div>
+            </div>
+
+
+            <!-- Password Generator Modal -->
+            <div class="modal" id="password_generator_modal" slot="modal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Password Generator</p>
+                        <button class="delete cancel-modal"></button>
+                    </header>
+
+                    <section class="modal-card-body">
+
+                        <div class="columns">
+                            <div class="column is-half">
+                                <div class="field">
+                                    <label class="label">Password Length</label>
+                                    <div class="control">
+                                        <input class="input" name="passwordLength" placeholder="Enter the length of the generated password" type="number"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label">Character Set</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select class="select is-expanded" name="characterSet">
+                                                <option value="alphanumeric_lower">Alphanumeric (Lower Case)</option>
+                                                <option value="alphanumeric_upper">Alphanumeric (Upper Case)</option>
+                                                <option value="alphanumeric_mixed">Alphanumeric (Mixed Case)</option>
+                                                <option value="alphanumeric_mixed_symbols">Alphanumeric + Symbols (Mixed Case)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control">
+                                <input class="input" name="generatedPassword" placeholder="Generated password will appear here" readonly type="text"/>
+                            </div>
+                        </div>
+
+                        <div class="buttons is-pulled-right">
+                            <button class="button generate-password-button">Generate</button>
+                        </div>
+                    </section>
+
+                    <footer class="modal-card-foot">
+                        <div class="buttons">
+                            <button class="button is-success submit-button">Use Password</button>
+                            <button class="button cancel-modal">Cancel</button>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+
+            <!-- Tag Selector Modal -->
+            <div class="modal" id="tag_selector_modal" slot="modal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Tag Selector</p>
+                        <button class="delete cancel-modal"></button>
+                    </header>
+
+                    <section class="modal-card-body">
+                        <label class="label">Available Tags</label>
+                        <div class="mb-4 tag-selector-list" id="tag_selector_list"></div>
+
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                <input class="input" name="newTag" placeholder="Enter a new tag" type="text"/>
+                            </div>
+                            <div class="control">
+                                <button class="button add-tag">Add</button>
+                            </div>
+                        </div>
+
+                        <input class="input" name="selectedTags" type="hidden"/>
+                    </section>
+
+                    <footer class="modal-card-foot">
+                        <div class="buttons is-pulled-right">
+                            <button class="button is-success submit-button">Use Selected</button>
+                            <button class="button cancel-modal">Cancel</button>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+
+            <!-- Tag Entry Template -->             
+            <template id="tag_filter_list_entry" slot="template">
+                <div class="tag-filter-list-entry">
+                    <label class="checkbox">
+                        <input class="tag-checkbox" type="checkbox">
+                        <span class="tag-label"></span>
+                    </label>
+                </div>
+            </template>
+        </record-form>
+    </view-switcher>
+
+    <!-- <div class="container height-100pct">
         <section class="ui-section" id="password_section">
             <span class="mt-2 top-right-button">
                 <a class="button-link settings-button" href="#" title="Settings">
@@ -206,7 +767,6 @@
 
             <label class="label">Password</label>
             <div class="field has-addons">
-                <!-- <label class="label">Password</label> -->
                 <div class="control is-expanded">
                     <input class="input" name="password" placeholder="Enter the password for the record" type="password"/>
                     <input class="input" name="passwordCopy" type="hidden"/>
@@ -341,7 +901,7 @@
             </div>
             <iframe id="subpage_iframe"></iframe>
         </section>
-    </div>
+    </div> -->
 
     <div id="modals_container">
         <!-- Delete Record Confirmation Modal -->

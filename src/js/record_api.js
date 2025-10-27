@@ -76,7 +76,7 @@ export default class RecordAPI {
     }
 
     deleteLocal(recordId) {
-        return this.invoke("delete_record_by_id", {recordId});
+        return this.invoke("delete_record", {recordId});
     }
 
     deleteRemote(recordId) {

@@ -4,6 +4,7 @@ const ALPHANUMERIC_MIXED = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 const ALPHANUMERIC_MIXED_SYMBOLS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
 const DEFAULT_CHARACTER_SET = "alphanumeric_mixed";
 const DEFAULT_PASSWORD_LENGTH = 12;
+const MINIMUM_PASSWORD_LENGTH = 10;
 const CHARACTER_SETS = {
     alphanumeric_lower: ALPHANUMERIC_LOWER,
     alphanumeric_upper: ALPHANUMERIC_UPPER,
@@ -135,6 +136,7 @@ export {
     CURRENT_VERSION,
     DEFAULT_CHARACTER_SET,
     DEFAULT_PASSWORD_LENGTH,
+    MINIMUM_PASSWORD_LENGTH,
     camelCaseString,
     fetchApplicationVersionDetails,
     showError,

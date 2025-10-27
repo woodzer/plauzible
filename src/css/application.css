@@ -52,8 +52,8 @@ body {
     bottom: 50px;
     left: 5px;
     position: absolute;
-    right: 5px;
-    top: 5px;
+    right: 0;
+    top: 0;
 }
 
 .close-button {
@@ -125,6 +125,15 @@ html {
 
 .record-list-table {
     font-size: 1.2em;
+}
+
+.settings-panel {
+    height: 80vh;
+    overflow: auto;
+}
+
+.scrolling-container {
+    overflow: auto;
 }
 
 #subpage_iframe {

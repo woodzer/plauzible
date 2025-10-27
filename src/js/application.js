@@ -346,16 +346,16 @@ function initializeApplication() {
     return(loadApplicationSettings()
         .then((settings) => {
             setupPageHandlers();
-            setupTermsOfService();
-            setupPasswordHandling();
-            setupModals();
-            setupRecordForm();
-            setupFileImporter();
-            setupNavigationBar();
-            showPasswordSection();
-            setupDropdownSelects();
-            setupRecordFilters();
-            runVersionCheck(settings);
+            // setupTermsOfService();
+            // setupPasswordHandling();
+            // setupModals();
+            // setupRecordForm();
+            // setupFileImporter();
+            // setupNavigationBar();
+            // showPasswordSection();
+            // setupDropdownSelects();
+            // setupRecordFilters();
+            // runVersionCheck(settings);
             touchTimeout();
             return(settings);
         })

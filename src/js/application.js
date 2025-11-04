@@ -12,7 +12,7 @@ import { camelCaseString,
          uniqueAndSortStringList,
          watchSpecificClass } from "./utilities.js";
 import { importBitwardenJSONFile } from "./imports.js";
-import RecordImporter from "./record_importer.js";
+import RecordImportExecutor from "./record_import_executor.js";
 import ImportReport from "./import_report.js";
 import RecordAPI from "./record_api.js";
 
@@ -494,7 +494,7 @@ function onStartImport(event) {
         importBitwardenJSONFile(pathField.value, report)
             .then((records) => {
                 let api = new RecordAPI(settings, invoke);
-                let importer = new RecordImporter(api, settings.records, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
+                let importer = new RecordImportExecutor(api, settings.records, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
 
                 importer.addProgressListener((event) => {
                     let progress = section.querySelector("#file_importer_progress_bar");

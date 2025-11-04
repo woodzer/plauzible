@@ -1,6 +1,6 @@
 const { invoke } = window.__TAURI__.core;
 
-export default class RecordImporter {
+export default class RecordImportExecutor {
     constructor(recordAPI, existingRecords, newRecords, passwordHash, importReport, ignoreDuplicates=true) {
         this.recordAPI = recordAPI;
         this.existingRecords = existingRecords;
@@ -22,7 +22,7 @@ export default class RecordImporter {
 
     doesRecordNameExist(name) {
         return(this.existingRecords.some((existingRecord) => existingRecord.name.trim() === name.trim()) ||
-            this.newRecords.some((newRecord) => newRecord.id !== newRecord.id && newRecord.name.trim() === name.trim()));
+               this.newRecords.some((newRecord) => newRecord.id !== newRecord.id && newRecord.name.trim() === name.trim()));
     }
 
     generateNewRecordName(record) {
@@ -59,10 +59,9 @@ export default class RecordImporter {
         await this.processEntries(records, this.passwordHash, this.importReport);
 
         this.importReport.write("Import completed.");
-        return(invoke("get_records_for_password", {passwordHash: this.passwordHash})
-            .then((json) => {
-                let allRecords = JSON.parse(json);
-                this.importReport.setResult(allRecords.records.sort((rhs, lhs) => rhs.name.localeCompare(lhs.name)));
+        return(this.recordAPI.getAll()
+            .then((records) => {
+                this.importReport.setResult(records);
                 return this.importReport;
             }));
     }

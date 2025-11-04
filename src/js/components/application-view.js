@@ -290,6 +290,8 @@ class ApplicationView extends View {
 
     handleImportFile() {
         console.log("Importing file...");
+        this.stateManager.touchApplicationTimeOut();
+        this.viewSwitcher.open("record_importer");
     }
 
     handleOpenSettings() {

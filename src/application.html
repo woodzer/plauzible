@@ -19,6 +19,7 @@
     <script type="module" src="/js/components/vertical-list.js" defer></script>
     <script type="module" src="/js/components/record-list-item.js" defer></script>
     <script type="module" src="/js/components/record-form.js" defer></script>
+    <script type="module" src="/js/components/record-importer.js" defer></script>
     <script type="module" src="/js/components/toolbar.js" defer></script>
     <script type="module" src="/js/components/log-in-view.js" defer></script>
     <script type="module" src="/js/components/settings-view.js" defer></script>
@@ -576,6 +577,81 @@
                 </div>
             </template>
         </record-form>
+
+
+        <record-importer name="record_importer" slot="view">
+            <section class="mx-6 mt-6" slot="interface">
+                <h2 class="is-4 mt-5 title">Import File</h2>
+                <hr>
+    
+                <section id="file_importer_form">
+                    <div class="field">
+                        <label class="label">File Type</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select class="select is-expanded" name="fileType">
+                                    <option value="bitwarden">Bitwarden JSON</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <label class="label">File</label>
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input" name="importFilePath" readonly type="text" accept=".json"/>
+                        </div>
+                        <div class="control">
+                            <button class="button open-file-button">
+                                <span class="icon is-small">
+                                    <i class="fas fa-folder-open"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="help is-danger is-hidden">
+                            You must select a file to import.
+                        </p>
+                    </div>
+    
+                    <div class="field">
+                        <label class="label">Duplicate Records</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select class="select is-expanded" name="duplicateRecords">
+                                    <option value="ignore">Ignore (i.e. do not import)</option>
+                                    <option value="rename">Rename (i.e. add a number to the end of the name)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="buttons is-pulled-right mt-3">
+                        <button class="button is-success submit-file-import">Import</button>
+                        <button class="button close-file-import">Close</button>
+                    </div>
+                </section>
+    
+                <section class="is-hidden" id="file_importer_progress">
+                    <label class="label">Import Progress</label>
+                    <progress class="progress is-primary" id="file_importer_progress_bar" value="0" max="100"></progress>
+    
+                    <label class="label mt-3">Import Log</label>
+                    <section class="log-output" id="import_log"></section>
+    
+                    <div class="buttons is-pulled-right mt-3">
+                        <button class="button close-file-import" disabled>Close</button>
+                    </div>
+                </section>
+
+                <section class="is-hidden" id="import_templates">
+                    <template id="import_log_template">
+                        <div class="log-line">
+                            <p></p>
+                        </div>
+                    </template>            
+                </section>
+            </section>    
+        </record-importer>
     </view-switcher>
 
     <!-- <div class="container height-100pct">

@@ -84,6 +84,6 @@ export default class StateManager {
      * Touches the application time out. This will reset the timeout to the default value.
      */
     touchApplicationTimeOut() {
-        this.startApplicationTimeOut
+        this.startApplicationTimeOut();
     }
 }

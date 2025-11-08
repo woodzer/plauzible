@@ -46,7 +46,7 @@ class VerticalList extends HTMLElement {
     }
 
     connectedCallback() {
-        console.log("connectedCallback() called.");
+        // Placeholder for future implementation.
     }
 
     getAllLineItems() {

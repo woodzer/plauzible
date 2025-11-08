@@ -71,7 +71,6 @@ export default class Toolbar extends HTMLElement {
         let elements = Array.from(slot.assignedElements());
 
 
-        console.log("Connected.");
         this.shadowRoot.querySelector(".tools").classList.add(`align-${this._alignment}`);
         if(this.getAttribute("border") === "true") {
             this.shadowRoot.querySelector(".toolbar").classList.add("bordered");

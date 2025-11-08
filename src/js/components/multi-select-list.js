@@ -62,18 +62,15 @@ class MultiSelectList extends HTMLElement {
 
     handleItemDeselected(event) {
         this.selectedEntries = this.selectedEntries.filter((entry) => entry !== event.detail.value);
-        console.log("SELECTED ENTRIES:", this.selectedEntries);
     }
 
     handleItemSelected(event) {
         this.selectedEntries.push(event.detail.value);
-        console.log("SELECTED ENTRIES:", this.selectedEntries);
     }
 
     setListEntries(listEntries) {
         let fragment = document.createDocumentFragment();
 
-        console.log("SETTING LIST ENTRIES:", listEntries);
         listEntries.forEach((listEntry) => {
             let item = new MultiSelectListItem();
 

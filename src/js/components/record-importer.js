@@ -29,7 +29,6 @@ class RecordImporter extends View {
      * Invoked whenever the view is activated (i.e. shown).
      */
     activated(data={}) {
-        console.log("activated() called for record importer.");
         this.resetInterface();
     }
 
@@ -39,7 +38,6 @@ class RecordImporter extends View {
         let elements = Array.from(slot.assignedElements())[0];
 
         super.connectedCallback();
-        console.log("connectedCallback() called for record importer.");
 
         elements.querySelectorAll('.close-file-import').forEach((button) => {
             button.addEventListener("click", (event) => {

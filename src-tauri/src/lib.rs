@@ -1,11 +1,34 @@
+use std::sync::Mutex;
+use tauri::{Manager, Window, WindowEvent};
+
 #[macro_use]
 extern crate json;
 
+mod app_state;
 mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            app.manage(Mutex::new(app_state::AppState::default()));
+            Ok(())
+        })
+        .on_window_event(|window: &Window, event: &WindowEvent| {
+            let app_state = window.app_handle().state::<Mutex<app_state::AppState>>();
+            let app_state = app_state.lock().unwrap();
+
+            if app_state.exit_on_close {
+                match event {
+                    WindowEvent::CloseRequested { api, .. } => {
+                        api.prevent_close();
+                        window.hide().unwrap();
+                    }
+                    _ => {}
+                }
+            };
+        })
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -29,6 +52,8 @@ pub fn run() {
             commands::select_random_characters,
             commands::store_record,
             commands::store_remote_record,
+            commands::terminate_application,
+            commands::update_exit_on_close,
             commands::update_password_generator_settings,
             commands::update_record,
             commands::update_remote_record,

@@ -1,7 +1,6 @@
 const { invoke } = window.__TAURI__.core;
 const Database = window.__TAURI__.sql;
 const FS = window.__TAURI__.fs;
-const Path = window.__TAURI__.path;
 
 const NONCE_KEY = "encryption.nonce";
 const SALT_KEY = "encryption.salt";

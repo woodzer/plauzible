@@ -1,13 +1,16 @@
-mod database;
-mod migrations;
-mod rest_api;
+pub mod database;
+pub mod migrations;
+pub mod rest_api;
 mod utilities;
 
-use std::hash::{DefaultHasher, Hash};
-use std::path::Path;
-use std::fs;
+use crate::app_state::AppState;
 use json::JsonValue;
 use rand::prelude::*;
+use std::fs;
+use std::hash::{DefaultHasher, Hash};
+use std::path::Path;
+use std::sync::Mutex;
+use tauri::Manager;
 use uuid::Uuid;
 
 #[tauri::command]
@@ -15,12 +18,19 @@ pub async fn delete_database(handle: tauri::AppHandle) -> Result<(), String> {
     let path = migrations::get_database_path(&handle).await?;
     match fs::remove_file(path) {
         Ok(_) => Ok(()),
-        Err(error) => Err(format!("Failed to remove database file. Cause: {:?}", error))
+        Err(error) => Err(format!(
+            "Failed to remove database file. Cause: {:?}",
+            error
+        )),
     }
 }
 
 #[tauri::command]
-pub async fn decrypt_record(handle: tauri::AppHandle, password_hash: String, record: String) -> Result<String, String> {
+pub async fn decrypt_record(
+    handle: tauri::AppHandle,
+    password_hash: String,
+    record: String,
+) -> Result<String, String> {
     let mut pool = database::connect_to_database(&handle).await?;
     let nonce_hex = database::get_nonce_string(&mut pool).await?;
     match utilities::decrypt(&password_hash, &nonce_hex, &record).await {
@@ -35,7 +45,12 @@ pub async fn delete_record(handle: tauri::AppHandle, record_id: i64) -> Result<i
 }
 
 #[tauri::command]
-pub async fn delete_remote_record(handle: tauri::AppHandle, password_hash: String, record: String, record_id: i64) -> Result<i64, String> {
+pub async fn delete_remote_record(
+    handle: tauri::AppHandle,
+    password_hash: String,
+    record: String,
+    record_id: i64,
+) -> Result<i64, String> {
     rest_api::delete_remote_record(&handle, &password_hash, &record, record_id).await
 }
 
@@ -111,12 +126,18 @@ pub async fn get_standard_settings(handle: tauri::AppHandle) -> Result<String, S
 }
 
 #[tauri::command]
-pub async fn get_local_records_for_password(handle: tauri::AppHandle, password_hash: String) -> Result<String, String> {
+pub async fn get_local_records_for_password(
+    handle: tauri::AppHandle,
+    password_hash: String,
+) -> Result<String, String> {
     database::get_local_records(&handle, &password_hash).await
 }
 
 #[tauri::command]
-pub async fn get_remote_records_for_password(handle: tauri::AppHandle, password_hash: String) -> Result<String, String> {
+pub async fn get_remote_records_for_password(
+    handle: tauri::AppHandle,
+    password_hash: String,
+) -> Result<String, String> {
     rest_api::get_remote_records(&handle, &password_hash).await
 }
 
@@ -141,7 +162,10 @@ pub async fn hash_password(handle: tauri::AppHandle, password: String) -> Result
 }
 
 #[tauri::command]
-pub async fn initialize_application(handle: tauri::AppHandle, salt: String) -> Result<String, String> {
+pub async fn initialize_application(
+    handle: tauri::AppHandle,
+    salt: String,
+) -> Result<String, String> {
     migrations::run_migrations(&handle).await?;
     let database_path = migrations::get_database_path(&handle).await?;
     let final_salt = utilities::validate_salt(&salt)?;
@@ -174,7 +198,11 @@ pub async fn select_random_characters(text: String, length: i32) -> Result<Strin
 }
 
 #[tauri::command]
-pub async fn store_record(handle: tauri::AppHandle, password_hash_hex: String, record: String) -> Result<String, String> {
+pub async fn store_record(
+    handle: tauri::AppHandle,
+    password_hash_hex: String,
+    record: String,
+) -> Result<String, String> {
     let mut json = match json::parse(&record) {
         Ok(value) => value,
         Err(error) => {
@@ -257,9 +285,13 @@ pub async fn store_record(handle: tauri::AppHandle, password_hash_hex: String, r
 }
 
 #[tauri::command]
-pub async fn store_remote_record(handle: tauri::AppHandle, password_hash: String, record: String) -> Result<String, String> {
+pub async fn store_remote_record(
+    handle: tauri::AppHandle,
+    password_hash: String,
+    record: String,
+) -> Result<String, String> {
     match rest_api::create_remote_record(&handle, &password_hash, &record).await {
-        Ok(output) =>  Ok(output),
+        Ok(output) => Ok(output),
         Err(error) => Err(error),
     }
 }
@@ -307,7 +339,12 @@ pub async fn update_record(
 }
 
 #[tauri::command]
-pub async fn update_remote_record(handle: tauri::AppHandle, password_hash: String, record_id: i64, record: String) -> Result<String, String> {
+pub async fn update_remote_record(
+    handle: tauri::AppHandle,
+    password_hash: String,
+    record_id: i64,
+    record: String,
+) -> Result<String, String> {
     match rest_api::update_remote_record(&handle, &password_hash, record_id, &record).await {
         Ok(output) => Ok(output),
         Err(error) => Err(error),
@@ -341,7 +378,10 @@ pub async fn update_remote_service_settings(
 }
 
 #[tauri::command]
-pub async fn update_sensitive_settings(handle: tauri::AppHandle, encryption_settings: String) -> Result<(), String> {
+pub async fn update_sensitive_settings(
+    handle: tauri::AppHandle,
+    encryption_settings: String,
+) -> Result<(), String> {
     let parts = encryption_settings.split(":").collect::<Vec<&str>>();
     if parts.len() != 2 {
         return Err("Invalid encryption settings format.".to_string());
@@ -350,5 +390,19 @@ pub async fn update_sensitive_settings(handle: tauri::AppHandle, encryption_sett
     let mut pool = database::connect_to_database(&handle).await?;
     database::update_setting_by_name(&mut pool, "encryption.salt", parts[0]).await?;
     database::update_setting_by_name(&mut pool, "encryption.nonce", parts[1]).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn terminate_application(handle: tauri::AppHandle) -> Result<(), String> {
+    handle.exit(0);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_exit_on_close(handle: tauri::AppHandle, exit_on_close: bool) -> Result<(), String> {
+    let app_state = handle.state::<Mutex<AppState>>();
+    let mut app_state = app_state.lock().unwrap();
+    app_state.exit_on_close = exit_on_close;
     Ok(())
 }

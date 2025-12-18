@@ -1,3 +1,4 @@
+use crate::commands::database;
 use aes::cipher::generic_array::GenericArray;
 use aes_gcm::{
     aead::{Aead, AeadCore, OsRng},
@@ -8,7 +9,6 @@ use hex;
 use rand::prelude::*;
 use std::str;
 use tauri::AppHandle;
-use crate::commands::database;
 
 pub struct FakeRecord {
     pub data: String,
@@ -190,7 +190,7 @@ pub async fn get_operation_mode(handle: &AppHandle) -> Result<String, String> {
     let setting = database::get_setting(&mut pool, "service.key").await?;
     match setting.value.trim() {
         "" => Ok("local".to_string()),
-        _ => Ok("remote".to_string())
+        _ => Ok("remote".to_string()),
     }
 }
 
@@ -198,7 +198,8 @@ pub async fn get_operation_mode(handle: &AppHandle) -> Result<String, String> {
 /// result will contain a string value that will be the URL of the remote service.
 pub async fn get_service_url(handle: &AppHandle) -> Result<String, String> {
     let mut pool = database::connect_to_database(handle).await?;
-    let setting = database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?;
+    let setting =
+        database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?;
     Ok(setting.value)
 }
 
@@ -233,52 +234,74 @@ pub async fn record_terms_accepted(handle: &AppHandle) -> Result<String, String>
     let data = object! {
         timestamp: timestamp
     };
-    let service_url = database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com").await?.value;
-    let service_key = database::get_setting_or_default(&mut pool, "service.key", "").await?.value;
-    let terms_accepted = database::get_setting_or_default(&mut pool, "terms.accepted", "false").await?.value;
-    let terms_remoted = database::get_setting_or_default(&mut pool, "terms.remoted", "false").await?.value;
+    let service_url =
+        database::get_setting_or_default(&mut pool, "service.url", "https://plauzible.com")
+            .await?
+            .value;
+    let service_key = database::get_setting_or_default(&mut pool, "service.key", "")
+        .await?
+        .value;
+    let terms_accepted = database::get_setting_or_default(&mut pool, "terms.accepted", "false")
+        .await?
+        .value;
+    let terms_remoted = database::get_setting_or_default(&mut pool, "terms.remoted", "false")
+        .await?
+        .value;
 
     if terms_accepted != "false" {
         timestamp = match terms_accepted.parse::<i64>() {
-            Ok(accepted) => {
-                match chrono::DateTime::<chrono::Utc>::from_timestamp(accepted, 0) {
-                    Some(date) => date.timestamp(),
-                    None => timestamp
-                }
+            Ok(accepted) => match chrono::DateTime::<chrono::Utc>::from_timestamp(accepted, 0) {
+                Some(date) => date.timestamp(),
+                None => timestamp,
             },
-            _ => timestamp
+            _ => timestamp,
         };
     }
 
     if service_key.len() > 0 && terms_remoted == "false" {
-        match client.post(format!("{}/api/terms/accept", service_url))
+        match client
+            .post(format!("{}/api/terms/accept", service_url))
             .header("Plauzible-API-Key", service_key)
             .header("Content-Type", "application/json")
             .body(data.dump())
             .send()
-            .await {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        database::create_setting(&mut pool, "terms.remoted", "true").await?;
-                        if terms_accepted == "false" {
-                            database::create_setting(&mut pool, "terms.accepted", format!("{}", timestamp).as_str()).await?;
-                        }
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    database::create_setting(&mut pool, "terms.remoted", "true").await?;
+                    if terms_accepted == "false" {
+                        database::create_setting(
+                            &mut pool,
+                            "terms.accepted",
+                            format!("{}", timestamp).as_str(),
+                        )
+                        .await?;
                     }
-                    Ok("true".to_string())
-                },
-                Err(error) => {
-                    Err(format!("Failed to send request to the remote service. Cause: {:?}", error))
                 }
+                Ok("true".to_string())
             }
+            Err(error) => Err(format!(
+                "Failed to send request to the remote service. Cause: {:?}",
+                error
+            )),
+        }
     } else {
         database::create_setting(&mut pool, "terms.remoted", "false").await?;
-        database::create_setting(&mut pool, "terms.accepted", format!("{}", timestamp).as_str()).await?;
+        database::create_setting(
+            &mut pool,
+            "terms.accepted",
+            format!("{}", timestamp).as_str(),
+        )
+        .await?;
         Ok("true".to_string())
     }
 }
 
 pub fn shuffle_vec<T>(vec: &Vec<T>) -> Vec<T>
-    where T: Clone {
+where
+    T: Clone,
+{
     let mut rng = rand::rng();
     let mut copy = vec.clone();
 

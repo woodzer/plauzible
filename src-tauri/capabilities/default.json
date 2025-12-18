@@ -13,6 +13,14 @@
     "clipboard-manager:allow-clear",
     "clipboard-manager:allow-write-text",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "core:app:allow-default-window-icon",
+    "core:app:allow-app-show",
+    "core:window:allow-close",
+    "core:window:allow-show",
+    "process:default",
+    "process:allow-exit",
+    "process:default",
+    "process:default"
   ]
 }

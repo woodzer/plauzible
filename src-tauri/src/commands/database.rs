@@ -1,18 +1,20 @@
+use crate::commands::migrations::get_database_path;
+use crate::commands::utilities;
 use json;
 use sqlx::sqlite::{Sqlite, SqliteConnectOptions, SqlitePool};
 use sqlx::{Pool, Row, Transaction};
 use std::str;
-use tauri::{AppHandle, Manager, path::BaseDirectory};
-use crate::commands::migrations::get_database_path;
-use crate::commands::utilities;
+use tauri::{path::BaseDirectory, AppHandle, Manager};
 
 const COUNT_RECORDS_SQL: &str = "select count(*) from data_records";
 const CREATE_RECORD_SQL: &str = "insert into data_records(data) values ($1) returning id";
-const CREATE_SETTING_SQL: &str = "insert into settings(key, value) values ($1, $2) on conflict do nothing";
+const CREATE_SETTING_SQL: &str =
+    "insert into settings(key, value) values ($1, $2) on conflict do nothing";
 const DELETE_RECORD_SQL: &str = "delete from data_records where id = ?";
 const FETCH_RECORD_SQL: &str = "select id, data from data_records";
 const FETCH_SETTING_SQL: &str = "select id, key, value from settings where key = ?";
-const GET_ALL_NON_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 0";
+const GET_ALL_NON_SENSITIVE_SETTINGS: &str =
+    "select id, key, value from settings where sensitive = 0";
 const GET_ALL_SENSITIVE_SETTINGS: &str = "select id, key, value from settings where sensitive = 1";
 const UPDATE_RECORD_SQL: &str = "update data_records set data = ? where id = ?";
 const UPDATE_SETTING_SQL: &str = "update settings set value = ? where key = ?";
@@ -45,7 +47,6 @@ pub async fn create_setting(pool: &mut Pool<Sqlite>, key: &str, value: &str) -> 
 /// Establishes a connection to the application database. Note that using this
 /// function, connection will fail if the database file does not exist.
 pub async fn connect_to_database(handle: &AppHandle) -> Result<Pool<Sqlite>, String> {
-    // let database_path = match get_existing_database_path(handle) {
     let database_path = get_database_path(handle).await?;
 
     let settings = SqliteConnectOptions::new()
@@ -130,9 +131,12 @@ pub async fn get_all_standard_settings(
 /// This function attempts to locate the application database file in the
 /// current working directory. If it is not found then None is returned.
 pub fn get_existing_database_path(handle: &AppHandle) -> Option<String> {
-    match handle.path().resolve("plauzible/plauzible.db", BaseDirectory::Data) {
+    match handle
+        .path()
+        .resolve("plauzible/plauzible.db", BaseDirectory::Data)
+    {
         Ok(path) => Some(path.into_os_string().into_string().unwrap()),
-        Err(_) => None
+        Err(_) => None,
     }
 }
 
@@ -247,7 +251,11 @@ pub async fn get_setting(pool: &mut Pool<Sqlite>, name: &str) -> Result<SettingR
 
 /// Attempts to retrieve a named setting from the application settings database
 /// table. If the setting is not found then the default value is returned.
-pub async fn get_setting_or_default(pool: &mut Pool<Sqlite>, name: &str, default: &str) -> Result<SettingRecord, String> {
+pub async fn get_setting_or_default(
+    pool: &mut Pool<Sqlite>,
+    name: &str,
+    default: &str,
+) -> Result<SettingRecord, String> {
     let default_value = SettingRecord {
         id: 0,
         key: name.to_string(),

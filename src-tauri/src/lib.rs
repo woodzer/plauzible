@@ -18,14 +18,16 @@ pub fn run() {
             let app_state = window.app_handle().state::<Mutex<app_state::AppState>>();
             let app_state = app_state.lock().unwrap();
 
-            if app_state.exit_on_close {
-                match event {
-                    WindowEvent::CloseRequested { api, .. } => {
+            match event {
+                WindowEvent::CloseRequested { api, .. } => {
+                    if !app_state.exit_on_close {
                         api.prevent_close();
                         window.hide().unwrap();
+                    } else {
+                        {}
                     }
-                    _ => {}
                 }
+                _ => {}
             };
         })
         .plugin(tauri_plugin_process::init())

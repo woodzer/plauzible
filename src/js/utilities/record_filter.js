@@ -8,7 +8,9 @@ export default class RecordFilter {
         let result = false;
 
         if(tagList.length > 0) {
-            result = record.tags.some((t) => tagList.includes(t));
+            if(record.tags && record.tags.length > 0) {
+                result = record.tags.some((t) => tagList.includes(t));
+            }
         }
 
         return(result);

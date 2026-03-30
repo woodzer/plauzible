@@ -69,6 +69,7 @@ class RecordForm extends View {
                 formElement.querySelector("input[name='userName']").value = data.record.userName;
                 formElement.querySelector("input[name='password']").value = data.record.password;
                 formElement.querySelector("input[name='url']").value = data.record.url;
+                formElement.querySelector("textarea[name='notes']").value = data.record.notes;
                 formElement.querySelector('input[name="tags"]').value = tags;
             } else {
                 showError("No record provided to populate the form.");

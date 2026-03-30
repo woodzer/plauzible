@@ -53,7 +53,7 @@ function initializeApplication() {
     let currentWindow = Window.getCurrentWindow();
     console.log("Current window:", currentWindow);
 
-    invoke("update_exit_on_close", { exitOnClose: true })
+    invoke("update_exit_on_close", { exitOnClose: false })
         .then(() => {
             return Menu.new(TRAY_ICON_MENU_OPTIONS);
         })

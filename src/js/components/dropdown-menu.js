@@ -125,7 +125,7 @@ class DropdownMenu extends HTMLElement {
     }
 
     handleKeyPress(event) {
-        if(event.key.toLowerCase() === "escape") {
+        if(event.key && event.key.toLowerCase() === "escape") {
             this.close();
         }
     }

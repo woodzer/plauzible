@@ -123,7 +123,9 @@ class RecordForm extends View {
     }
 
     generatePassword(event, modal) {
-        event.preventDefault();
+        if(event) {
+            event.preventDefault();
+        }
         this.stateManager.touchApplicationTimeOut();
         if(modal) {
             let passwordLength = parseInt(modal.querySelector('input[name="passwordLength"]').value);
@@ -319,7 +321,9 @@ class RecordForm extends View {
      * Sets up the event handlers for the password generator modal.
      */
     setUpPasswordGeneratorModalEventHandlers(modal, formElement) {
-        modal.querySelector(".generate-password-button").addEventListener("click", (event) => this.generatePassword(event, modal));  
+        modal.querySelector('select[name="characterSet"]').addEventListener("change", (event) => this.generatePassword(null, modal));
+        modal.querySelector('input[name="passwordLength"]').addEventListener("input", (event) => this.generatePassword(null, modal));
+        modal.querySelector(".generate-password-button").addEventListener("click", (event) => this.generatePassword(event, modal));
         modal.querySelector(".submit-button").addEventListener("click", (event) => {
             let field = formElement.querySelector('input[name="password"]');
             let generatedPasswordField = modal.querySelector('input[name="generatedPassword"]');
@@ -389,8 +393,7 @@ class RecordForm extends View {
 
             passwordLengthField.value = `${this.stateManager.getValue("passwordLength")}`;
             characterSetField.value = this.stateManager.getValue("passwordCharacterSet");
-            modal.querySelector('input[name="generatedPassword"]').value = "";
-            modal.querySelector("button.submit-button").disabled = true;
+            modal.querySelector('input[name="generatedPassword"]').value = this.generatePassword(null, modal);
             
             modal.classList.add("is-active");
         }

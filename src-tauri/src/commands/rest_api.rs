@@ -5,6 +5,9 @@ use reqwest;
 use tauri::AppHandle;
 use uuid::Uuid;
 
+/// NOTE: Change this to true for test environments. If you don't you will get invalid certificate errors.
+const ACCEPT_INVALID_CERTS: bool = false;
+
 struct ServiceSettings {
     key: String,
     url: String,
@@ -314,11 +317,8 @@ pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Resu
 
 /// Builds a request client with the appropriate settings.
 fn get_reqwest_client() -> Result<reqwest::Client, String> {
-    // NOTE: Change this to true for test environments.
-    let accept_invalid_certs = false;
-
     let client = match reqwest::Client::builder()
-      .danger_accept_invalid_certs(accept_invalid_certs)
+      .danger_accept_invalid_certs(ACCEPT_INVALID_CERTS)
       .build() {
         Ok(client) => client,
         Err(error) => {

@@ -42,7 +42,7 @@ pub async fn create_remote_record(
         owner_id: owner_id.clone()
     };
     let session_key = get_session_key(password_hash, &service_settings.salt)?;
-    let client = reqwest::Client::new();
+    let client = get_reqwest_client()?;
     let url = format!("{}/api/records/{}", service_settings.url, session_key);
     let response = match client
         .post(url)
@@ -177,7 +177,7 @@ pub async fn delete_remote_record(
         owner_id: owner_id
     };
     let session_key = get_session_key(password_hash, &settings.salt)?;
-    let client = reqwest::Client::new();
+    let client = get_reqwest_client()?;
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client
         .delete(url)
@@ -208,7 +208,7 @@ pub async fn delete_remote_record(
 pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Result<String, String> {
     let settings = get_service_settings(handle).await?;
     let session_key = get_session_key(password_hash, &settings.salt)?;
-    let client = reqwest::Client::new();
+    let client = get_reqwest_client()?;
     let url = format!("{}/api/records/{}", settings.url, session_key);
     let response = match client
         .get(url)
@@ -312,6 +312,25 @@ pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Resu
     Ok(json::stringify(objects))
 }
 
+/// Builds a request client with the appropriate settings.
+fn get_reqwest_client() -> Result<reqwest::Client, String> {
+    // NOTE: Change this to true for test environments.
+    let accept_invalid_certs = false;
+
+    let client = match reqwest::Client::builder()
+      .danger_accept_invalid_certs(accept_invalid_certs)
+      .build() {
+        Ok(client) => client,
+        Err(error) => {
+            return Err(format!(
+                "Failed to build request client. Cause: {:?}",
+                error
+            ))
+        }
+      };
+    Ok(client)
+}
+
 /// Retrieves a collection of the various settings from the application database
 /// that will be need to interact with the remote service.
 async fn get_service_settings(handle: &AppHandle) -> Result<ServiceSettings, String> {
@@ -383,7 +402,7 @@ pub async fn update_remote_record(
         owner_id: owner_id
     };
     let session_key = get_session_key(password_hash, &settings.salt)?;
-    let client = reqwest::Client::new();
+    let client = get_reqwest_client()?;
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client
         .put(url)

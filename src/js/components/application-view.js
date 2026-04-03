@@ -512,7 +512,7 @@ class ApplicationView extends View {
 
         if(list && this.stateManager.getValue("mode")) {
             const settings  = {mode: this.stateManager.getValue("mode"),
-                passwordHash: this.stateManager.getValue("passwordHash")};
+                               passwordHash: this.stateManager.getValue("passwordHash")};
             const recordAPI = new RecordAPI(settings, invoke);
             return(recordAPI.getAll()
                 .then((records) => {
@@ -552,7 +552,8 @@ class ApplicationView extends View {
             let recordId = parseInt(event.target.dataset.recordId);
             if(recordId && !isNaN(recordId)) {
                 const settings  = {mode: this.stateManager.getValue("mode"),
-                                   passwordHash: this.stateManager.getValue("passwordHash")};
+                                   passwordHash: this.stateManager.getValue("passwordHash"),
+                                   records: this.stateManager.getValue("records")};
                 let api = new RecordAPI(settings, invoke);
                 api.delete(recordId)
                     .then((id) => {

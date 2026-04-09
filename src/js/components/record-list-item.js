@@ -7,7 +7,7 @@ const LIST_ITEM_STYLES = `
 
     .record-list-item {
         align-items: center;
-        border: solid 1px #fff;
+        border: solid 1px var(--bulma-border-weak, #fff);
         cursor: pointer;
         display: grid;
         grid-template-columns: auto 60px;
@@ -15,8 +15,14 @@ const LIST_ITEM_STYLES = `
     }
 
     .record-list-item:hover {
-        background-color: rgba(230, 230, 230, 0.2);
-        border: dotted 1px #007;
+        background-color: rgba(0, 0, 0, 0.05);
+        border: dotted 1px var(--bulma-link, #007);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .record-list-item:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
     }
 </style>
 `;

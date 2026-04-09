@@ -20,7 +20,7 @@ const APPLICATION_VIEW_STYLES = `
 
 .header {
     align-items: left;
-    border-bottom: solid 1px #ccc;
+    border-bottom: solid 1px var(--bulma-border-weak, #ccc);
     display: flex;
     gap: 10px;
     flex-flow: row nowrap;
@@ -67,9 +67,9 @@ const APPLICATION_VIEW_TEMPLATE = `
                     <div class="control">
                         <button class="button" id="open_filter_button">
                             <span class="icon">
-                                <svg id="svg" fill="#000000" stroke="#000000" width="200px" height="200px" version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <svg id="svg" fill="currentColor" stroke="currentColor" width="200px" height="200px" version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg">
                                     <g id="IconSvg_bgCarrier" stroke-width="0"></g>
-                                    <g id="IconSvg_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC"></g>
+                                    <g id="IconSvg_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor" style="opacity: 0.35"></g>
                                     <g id="IconSvg_iconCarrier">
                                         <path xmlns="http://www.w3.org/2000/svg" d="m349.96 635.04c1.8906 0.75391 3.8555 1.1172 5.8242 1.1172 4.25 0 8.4062-1.7148 11.445-4.9297l88.434-93.488c2.7695-2.9297 4.2969-6.8008 4.2969-10.832v-151.3l166.07-185.53c4.1406-4.6289 5.1797-11.258 2.6445-16.926-2.5352-5.6641-8.1562-9.3203-14.375-9.3203h-428.61c-6.2188 0-11.84 3.6406-14.375 9.3242-2.5352 5.668-1.4961 12.297 2.6445 16.926l166.08 185.53 0.003906 244.8c-0.015625 6.4414 3.918 12.234 9.918 14.629zm-129.05-439.72h358.18l-146.61 163.77c-2.582 2.8984-4.0156 6.6289-4.0156 10.5v151.05l-56.945 60.207v-211.25c0-3.8711-1.4336-7.6055-4.0156-10.5z"></path>
                                     </g>
@@ -81,9 +81,9 @@ const APPLICATION_VIEW_TEMPLATE = `
                     <div class="control">
                         <button class="button" id="clear_filter_button">
                             <span class="icon">
-                                <svg id="svg" fill="#000000" stroke="#000000" width="24px" height="24px" version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <svg id="svg" fill="currentColor" stroke="currentColor" width="24px" height="24px" version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg">
                                     <g id="IconSvg_bgCarrier" stroke-width="0"></g>
-                                    <g id="IconSvg_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC"></g>
+                                    <g id="IconSvg_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor" style="opacity: 0.35"></g>
                                     <g id="IconSvg_iconCarrier">
                                         <defs xmlns="http://www.w3.org/2000/svg">
                                             <clipPath id="a">

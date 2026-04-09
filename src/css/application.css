@@ -24,15 +24,15 @@
 }
 
 .button-link {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .button-link:visited {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .close-iframe-section {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
     font-weight: bold;
     height: 48px;
     margin-bottom: 2px;
@@ -41,7 +41,7 @@
 
 
 .close-iframe-section:visited {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .error-log-line {
@@ -63,16 +63,16 @@ body {
 }
 
 .close-button a {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .close-button a:visited {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .filter-dropdown {
-    background-color: #fff;
-    border: solid 1px #D6D9E0;
+    background-color: var(--bulma-scheme-main, #fff);
+    border: solid 1px var(--bulma-border-weak, #D6D9E0);
     max-height: 200px;
     min-height: 25px;
     overflow: auto;
@@ -97,7 +97,7 @@ html {
 }
 
 .log-output {
-    border: solid 1px #777;
+    border: solid 1px var(--bulma-border, #777);
     height: 20em;
     overflow: auto;
     padding: 5px;
@@ -112,8 +112,8 @@ html {
 }
 
 .record-list {
-    border-bottom: solid 1px #777;
-    border-top: solid 1px #777;
+    border-bottom: solid 1px var(--bulma-border, #777);
+    border-top: solid 1px var(--bulma-border, #777);
     bottom: 0;
     left: 0;
     overflow: auto;
@@ -155,13 +155,13 @@ html {
 }
 
 .table-row {
-    background-color: #fff;
+    background-color: var(--bulma-scheme-main, #fff);
     display: grid;
     grid-template-columns: auto 200px;
 }
 
 .table-row:hover {
-    background-color: rgba(250, 250, 250, 0.5);
+    background-color: var(--bulma-scheme-main-bis, rgba(250, 250, 250, 0.5));
 }
 
 .tag-filter-list-entry {
@@ -170,24 +170,29 @@ html {
 }
 
 .tag-selector-list {
-    border: solid 1px #D6D9E0;
+    border: solid 1px var(--bulma-border-weak, #D6D9E0);
     max-height: 200px;
     overflow: auto;
 }
 
 .top-right-button {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
     position: absolute;
     right: 10px;
     top: 10px;
 }
 
 .top-right-button a {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
 }
 
 .top-right-button a:visited {
-    color: #555;
+    color: var(--bulma-text-weak, #555);
+}
+
+/* Inline SVGs in icon buttons: follow Bulma button / scheme text color */
+.button .icon svg {
+    fill: currentColor;
 }
 
 .ui-section {

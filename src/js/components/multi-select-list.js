@@ -29,7 +29,7 @@ const MULTI_SELECT_LIST_ITEM_TEMPLATE = `
 const MULTI_SELECT_LIST_STYLES = `
 <style>
     .multi-select-list-container {
-        border: solid 1px #ccc;
+        border: solid 1px var(--bulma-border-weak, #ccc);
         height: 100%;
         max-height: 200px;
         overflow: auto;

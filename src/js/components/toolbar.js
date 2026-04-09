@@ -9,7 +9,7 @@ const TOOLBAR_STYLES = `
     }
 
     .bordered {
-        border: solid 1px #777;
+        border: solid 1px var(--bulma-border, #777);
         border-radius: 5px;
     }
 

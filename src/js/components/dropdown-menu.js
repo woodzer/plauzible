@@ -8,7 +8,13 @@ const MENU_ITEM_STYLES = `
     }
 
     .menu-item-container:hover {
-        background-color: rgba(200, 200, 200, 0.2);
+        background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .menu-item-container:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
     }
 
     .menu-item-label {
@@ -31,7 +37,7 @@ const MENU_ITEM_TEMPLATE = `
 const MENU_SEPARATOR_STYLES = `
 <style>
     hr {
-        border-color: #ccc;
+        border-color: var(--bulma-border-weak, #ccc);
     };
 </style>
 `;
@@ -49,9 +55,10 @@ const MENU_STYLES = `
     }
 
     .menu-content {
-        background-color: #fff;
-        border: solid 1px #555;
+        background-color: var(--bulma-scheme-main, #fff);
+        border: solid 1px var(--bulma-border, #555);
         border-radius: 5px;
+        color: var(--bulma-text, inherit);
         min-width: 100px;
         min-height: 20px;
         padding: 3px 5px;
@@ -64,7 +71,12 @@ const MENU_STYLES = `
     }
 
     .menu-trigger {
+        color: var(--bulma-text-weak, #555);
         cursor: pointer;
+    }
+
+    .menu-trigger svg path {
+        fill: currentColor;
     }
 
     .hidden {

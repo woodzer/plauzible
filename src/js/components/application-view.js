@@ -1,6 +1,8 @@
 const { invoke } = window.__TAURI__.core;
 const { getCurrentWindow } = window.__TAURI__.window;
 const { writeText } = window.__TAURI__.clipboardManager;
+const { save } = window.__TAURI__.dialog;
+const { writeTextFile } = window.__TAURI__.fs;
 import { RecordListItem } from "./record-list-item.js";
 import RecordAPI from "../record_api.js";
 import RecordFilter from "../utilities/record_filter.js";
@@ -106,6 +108,7 @@ const APPLICATION_VIEW_TEMPLATE = `
         <div class="header-right">
             <dropdown-menu class="app-dropdown-menu" escapeCloses="true">
                 <dropdown-menu-item event="record.file.import" label="Import Records" slot="menuitem"></dropdown-menu-item>
+                <dropdown-menu-item event="data.export" label="Export Data…" slot="menuitem"></dropdown-menu-item>
                 <dropdown-menu-item event="settings.open" label="Settings" slot="menuitem"></dropdown-menu-item>
                 <dropdown-menu-item-separator slot="menuitem"></dropdown-menu-item-separator>
                 <dropdown-menu-item event="session.logout" label="Log Out" slot="menuitem"></dropdown-menu-item>
@@ -312,6 +315,39 @@ class ApplicationView extends View {
         this.stateManager.touchApplicationTimeOut();
     }
 
+    handleExportAllData() {
+        this.stateManager.touchApplicationTimeOut();
+        let passwordHash = this.stateManager.getValue("passwordHash");
+        if(!passwordHash) {
+            showError("Cannot export: session is not active.");
+            return;
+        }
+        invoke("export_unlocked_snapshot", {passwordHash})
+            .then((jsonText) => {
+                let data = JSON.parse(jsonText);
+                let pretty = JSON.stringify(data, null, 2);
+                return save({
+                    defaultPath: "plauzible-export.json",
+                    filters: [{ name: "JSON", extensions: ["json"] }]
+                }).then((path) => ({ path, pretty }));
+            })
+            .then((result) => {
+                if(!result || !result.path) {
+                    return Promise.resolve(false);
+                }
+                return writeTextFile(result.path, result.pretty).then(() => true);
+            })
+            .then((saved) => {
+                if(saved) {
+                    showSuccess("Data exported successfully. The file contains secrets; store it safely.");
+                }
+            })
+            .catch((error) => {
+                console.error("Export failed:", error);
+                showError("Export failed. See console for details.");
+            });
+    }
+
     handleDeleteRecordEvent(event) {
         const record = this.stateManager.getValue("records").find((record) => `${record.id}` === event.detail.id);
 
@@ -422,6 +458,9 @@ class ApplicationView extends View {
                 break;
             case "record.file.import":
                 this.handleImportFile();
+                break;
+            case "data.export":
+                this.handleExportAllData();
                 break;
             case "settings.open":
                 this.handleOpenSettings();

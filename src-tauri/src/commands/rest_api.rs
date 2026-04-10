@@ -184,7 +184,7 @@ pub async fn delete_remote_record(
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client
         .delete(url)
-        .header("Plauzible-API-Key", settings.key)
+        .header("Plauzible-API-Key", settings.key.as_str())
         .header("Content-Type", "application/json")
         .body(json::stringify(data))
         .send()
@@ -206,16 +206,17 @@ pub async fn delete_remote_record(
     Ok(record_id)
 }
 
-/// Retrieves a collection of records from the remote service for the current
-/// session key.
-pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Result<String, String> {
+async fn remote_records_document(
+    handle: &AppHandle,
+    password_hash: &str,
+) -> Result<(ServiceSettings, json::JsonValue), String> {
     let settings = get_service_settings(handle).await?;
     let session_key = get_session_key(password_hash, &settings.salt)?;
     let client = get_reqwest_client()?;
     let url = format!("{}/api/records/{}", settings.url, session_key);
     let response = match client
         .get(url)
-        .header("Plauzible-API-Key", settings.key)
+        .header("Plauzible-API-Key", settings.key.as_str())
         .header("Content-Type", "application/json")
         .send()
         .await
@@ -266,6 +267,14 @@ pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Resu
             .to_string());
     }
 
+    Ok((settings, json))
+}
+
+/// Retrieves a collection of records from the remote service for the current
+/// session key.
+pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Result<String, String> {
+    let (settings, json) = remote_records_document(handle, password_hash).await?;
+
     // Decrypt the record data and store the results in an array.
     let mut objects = json::JsonValue::new_array();
     for record in json["records"].members() {
@@ -313,6 +322,51 @@ pub async fn get_remote_records(handle: &AppHandle, password_hash: &str) -> Resu
     }
 
     Ok(json::stringify(objects))
+}
+
+/// Decrypted remote credential records for export (id + full plaintext JSON per row).
+pub async fn collect_remote_decrypted_records_for_export(
+    handle: &AppHandle,
+    password_hash: &str,
+) -> Result<json::JsonValue, String> {
+    let (settings, json) = remote_records_document(handle, password_hash).await?;
+    let mut objects = json::JsonValue::new_array();
+
+    for record in json["records"].members() {
+        let record_id = record["id"].as_i64().unwrap_or(0);
+
+        match utilities::decrypt(
+            password_hash,
+            &settings.nonce,
+            record["data"].as_str().unwrap_or(""),
+        )
+        .await
+        {
+            Some(json_data) => match json::parse(&json_data) {
+                Ok(content) => match objects.push(object! {
+                    id: record_id,
+                    decrypted: content
+                }) {
+                    Err(error) => {
+                        return Err(format!(
+                            "Failed to store export record data. Cause: {:?}",
+                            error
+                        ))
+                    }
+                    _ => {}
+                },
+                Err(error) => {
+                    return Err(format!(
+                        "Failed to parse decrypted record content as a JSON object. Cause: {:?}",
+                        error
+                    ))
+                }
+            },
+            _ => {}
+        }
+    }
+
+    Ok(objects)
 }
 
 /// Builds a request client with the appropriate settings.
@@ -406,7 +460,7 @@ pub async fn update_remote_record(
     let url = format!("{}/api/records/{}/{}", settings.url, session_key, record_id);
     let response = match client
         .put(url)
-        .header("Plauzible-API-Key", settings.key)
+        .header("Plauzible-API-Key", settings.key.as_str())
         .header("Content-Type", "application/json")
         .body(json::stringify(data))
         .send()

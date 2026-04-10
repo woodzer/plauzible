@@ -202,6 +202,53 @@ pub async fn get_local_records(handle: &AppHandle, password_hash: &str) -> Resul
     }))
 }
 
+/// Decrypted local credential records for export (id + full plaintext JSON per row).
+pub async fn collect_local_decrypted_records_for_export(
+    handle: &AppHandle,
+    password_hash: &str,
+) -> Result<json::JsonValue, String> {
+    let mut pool = connect_to_database(handle).await?;
+
+    let records: Vec<DataRecord> = match sqlx::query_as(FETCH_RECORD_SQL).fetch_all(&pool).await {
+        Ok(list) => list,
+        Err(error) => return Err(format!("Error retrieving record data. Cause: {:?}", error)),
+    };
+
+    let mut objects = json::JsonValue::new_array();
+    let nonce_setting = match get_setting(&mut pool, "encryption.nonce").await {
+        Ok(setting) => setting,
+        Err(error) => {
+            return Err(format!(
+                "Failed to locate the application nonce setting. Cause: {:?}",
+                error
+            ))
+        }
+    };
+
+    for record in records {
+        match utilities::decrypt(password_hash, &nonce_setting.value, &record.data).await {
+            Some(json_data) => match json::parse(&json_data) {
+                Ok(content) => match objects.push(object! {
+                    id: record.id,
+                    decrypted: content
+                }) {
+                    Err(error) => {
+                        return Err(format!(
+                            "Error storing export record data. Cause: {:?}",
+                            error
+                        ))
+                    }
+                    _ => (),
+                },
+                Err(_) => (),
+            },
+            _ => (),
+        }
+    }
+
+    Ok(objects)
+}
+
 pub async fn get_nonce_string(pool: &mut Pool<Sqlite>) -> Result<String, String> {
     match get_setting(pool, "encryption.nonce").await {
         Ok(record) => Ok(record.value),

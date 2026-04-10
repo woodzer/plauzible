@@ -41,6 +41,7 @@ pub fn run() {
             commands::delete_database,
             commands::delete_record,
             commands::delete_remote_record,
+            commands::export::export_unlocked_snapshot,
             commands::get_application_settings,
             commands::get_database_path,
             commands::get_local_records_for_password,

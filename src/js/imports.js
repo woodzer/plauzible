@@ -56,7 +56,64 @@ function isRecordNameUnique(existingRecords, record) {
     return(existingRecordNames.includes(record.name));
 }
 
+/**
+ * Reads a Plauzible export snapshot (formatVersion 1) and returns credential objects
+ * suitable for RecordImportExecutor. Only decrypted vault entries are imported;
+ * snapshot settings are not applied (they can conflict with the current database).
+ */
+function importPlauzibleSnapshotJSONFile(filePath, importReport) {
+    if(!filePath || filePath.trim() === "") {
+        importReport.writeError("Invalid file specified for Plauzible snapshot import.");
+        return Promise.reject(new Error("Invalid file specified for Plauzible snapshot import."));
+    }
+
+    return readTextFile(filePath)
+        .then((text) => {
+            try {
+                let json = JSON.parse(text);
+                if(json.formatVersion !== 1) {
+                    throw new Error(`Unsupported or missing formatVersion (expected 1, got ${json.formatVersion}).`);
+                }
+                if(!Array.isArray(json.records)) {
+                    throw new Error("Snapshot does not contain a records array.");
+                }
+
+                let records = [];
+                json.records.forEach((row, index) => {
+                    if(!row || typeof row !== "object") {
+                        throw new Error(`Invalid record entry at index ${index}.`);
+                    }
+                    if(!row.decrypted || typeof row.decrypted !== "object" || Array.isArray(row.decrypted)) {
+                        throw new Error(`Missing or invalid decrypted payload at index ${index}.`);
+                    }
+
+                    let record = JSON.parse(JSON.stringify(row.decrypted));
+                    if(typeof record.name !== "string" || record.name.trim() === "") {
+                        throw new Error(`Record at index ${index} is missing a non-empty name.`);
+                    }
+                    if(!Array.isArray(record.tags)) {
+                        record.tags = [];
+                    }
+
+                    importReport.write(`Found the ${record.name} entry.`);
+                    records.push(record);
+                });
+
+                importReport.write(`Read ${records.length} records from Plauzible snapshot '${filePath}'.`);
+                return records;
+            } catch(error) {
+                importReport.writeError(`Failed to parse Plauzible snapshot file. Cause: ${error}`);
+                throw new Error(`Failed to parse Plauzible snapshot file. Cause: ${error}`);
+            }
+        })
+        .catch((error) => {
+            importReport.writeError(`Failed to read Plauzible snapshot file. Cause: ${error}`);
+            throw error;
+        });
+}
+
 export {
     importBitwardenJSONFile,
+    importPlauzibleSnapshotJSONFile,
     isRecordNameUnique
 };

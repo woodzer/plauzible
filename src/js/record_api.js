@@ -65,6 +65,7 @@ export default class RecordAPI {
     }
 
     createRemote(details) {
+        details = this.cleanRecordObject(details);
         return this.invoke("store_remote_record", {passwordHash: this.settings.passwordHash, record: JSON.stringify(details)})
             .then((output) => {
                 try {

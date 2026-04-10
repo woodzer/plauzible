@@ -1,5 +1,5 @@
 import View from "./view.js";
-import { importBitwardenJSONFile } from "../imports.js";
+import { importBitwardenJSONFile, importPlauzibleSnapshotJSONFile } from "../imports.js";
 import RecordAPI from "../record_api.js";
 import ImportReport from "../import_report.js";
 import RecordImportExecutor from "../record_import_executor.js";
@@ -168,41 +168,46 @@ class RecordImporter extends View {
         let typeField = elements.querySelector('select[name="fileType"]');
         let duplicateField = elements.querySelector('select[name="duplicateRecords"]');
         let report = new ImportReport();
-    
+
+        let loadRecords;
         if(typeField.value === "bitwarden") {
-            let formSection = elements.querySelector("#file_importer_form");
-            let progressSection = elements.querySelector("#file_importer_progress");
-
-            importBitwardenJSONFile(pathField.value, report)
-                .then((records) => {
-                    const settings  = {mode: this.stateManager.getValue("mode"),
-                                       passwordHash: this.stateManager.getValue("passwordHash")};
-                    const existingRecords = this.stateManager.getValue("records");
-                    let api = new RecordAPI(settings, invoke);
-                    let importer = new RecordImportExecutor(api, existingRecords, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
-    
-                    importer.addProgressListener((event) => {
-                        let progress = progressSection.querySelector("#file_importer_progress_bar");
-    
-                        if(progress) {
-                            progress.value = event.detail.percentage;
-                        }
-                    });
-    
-                    report.addEventListener("log", (e) => this.handleImportLogEvent(e, elements));
-                    importer.addCompletionListener((e) => this.handleImportCompletionEvent(e, elements));
-    
-                    formSection.classList.add("is-hidden");
-                    progressSection.querySelector(".close-file-import").disabled = true;
-                    progressSection.classList.remove("is-hidden");
-
-    
-                    importer.import();
-                })
-                .catch((error) => showError(`Failed to import the file. Cause: ${error}`));
+            loadRecords = importBitwardenJSONFile(pathField.value, report);
+        } else if(typeField.value === "plauzible_snapshot") {
+            loadRecords = importPlauzibleSnapshotJSONFile(pathField.value, report);
         } else {
             showError("The import type requested is currently not supported.");
-        }    
+            return;
+        }
+
+        let formSection = elements.querySelector("#file_importer_form");
+        let progressSection = elements.querySelector("#file_importer_progress");
+
+        loadRecords
+            .then((records) => {
+                const settings  = {mode: this.stateManager.getValue("mode"),
+                                   passwordHash: this.stateManager.getValue("passwordHash")};
+                const existingRecords = this.stateManager.getValue("records");
+                let api = new RecordAPI(settings, invoke);
+                let importer = new RecordImportExecutor(api, existingRecords, records, settings.passwordHash, report, (duplicateField.value === "ignore"));
+
+                importer.addProgressListener((event) => {
+                    let progress = progressSection.querySelector("#file_importer_progress_bar");
+
+                    if(progress) {
+                        progress.value = event.detail.percentage;
+                    }
+                });
+
+                report.addEventListener("log", (e) => this.handleImportLogEvent(e, elements));
+                importer.addCompletionListener((e) => this.handleImportCompletionEvent(e, elements));
+
+                formSection.classList.add("is-hidden");
+                progressSection.querySelector(".close-file-import").disabled = true;
+                progressSection.classList.remove("is-hidden");
+
+                importer.import();
+            })
+            .catch((error) => showError(`Failed to import the file. Cause: ${error}`));
     }
 
     validateImportSettings() {

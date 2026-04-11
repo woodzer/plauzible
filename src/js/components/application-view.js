@@ -107,9 +107,10 @@ const APPLICATION_VIEW_TEMPLATE = `
 
         <div class="header-right">
             <dropdown-menu class="app-dropdown-menu" escapeCloses="true">
+                <dropdown-menu-item event="settings.open" label="Settings" slot="menuitem"></dropdown-menu-item>
+                <dropdown-menu-item-separator slot="menuitem"></dropdown-menu-item-separator>
                 <dropdown-menu-item event="record.file.import" label="Import Records" slot="menuitem"></dropdown-menu-item>
                 <dropdown-menu-item event="data.export" label="Export Data…" slot="menuitem"></dropdown-menu-item>
-                <dropdown-menu-item event="settings.open" label="Settings" slot="menuitem"></dropdown-menu-item>
                 <dropdown-menu-item-separator slot="menuitem"></dropdown-menu-item-separator>
                 <dropdown-menu-item event="session.logout" label="Log Out" slot="menuitem"></dropdown-menu-item>
                 <dropdown-menu-item event="application.exit" label="Exit" slot="menuitem"></dropdown-menu-item>
